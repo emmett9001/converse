@@ -16,6 +16,7 @@ class Converse():
         self.stdscr.keypad(1)
 
         self.backbuffer = []
+        self.height,self.width = self.stdscr.getmaxyx()
 
     def resolve(self, user_in):
         if user_in == constants.COMMAND_QUIT:
@@ -24,18 +25,19 @@ class Converse():
     def put(self, output, command=False):
         self.stdscr.clear()
         self.stdscr.refresh()
-        height,width = self.stdscr.getmaxyx()
         rev = list(self.backbuffer)
         rev.reverse()
         i = 0
         for string, iscommand in rev:
-            tup = (string, iscommand)
-            ypos = height-2-i
+            ypos = self.height-2-i
             if ypos > 0:
-                self.stdscr.addstr(ypos,0,string)
+                printstring = string
+                if iscommand:
+                    printstring = "> %s" % string
+                self.stdscr.addstr(ypos,0,printstring)
             i += 1
-        self.stdscr.addstr(height-1, 0, output)
-        backbuf_string = output if not command else "> %s" % output
+        self.stdscr.addstr(self.height-1, 0, output)
+        backbuf_string = output
         to_append = (backbuf_string, command)
         if output != "> ":
             self.backbuffer.append(to_append)
@@ -44,17 +46,24 @@ class Converse():
         self.put(prompt)
         keyin = ''
         buff = ''
+        hist_counter = 1
         while keyin != 10:
             keyin = self.stdscr.getch()
             if keyin >= 32 and keyin <= 126:
                 buff += chr(keyin)
             elif keyin == curses.KEY_DL:  # TODO - broken keycode
                 buff = buff[:-1]
+            elif keyin == curses.KEY_UP:
+                hist_commands = [(s,c) for s,c in self.backbuffer if c]
+                buff = hist_commands[-hist_counter][0]
+                self.stdscr.addstr(self.height-1, 0, "> %s" % buff)
+                if hist_counter < len(hist_commands) - 1:
+                    hist_counter += 1
             elif keyin == curses.KEY_F1:
                 curses.endwin()
                 sys.exit()
-        self.stdscr.refresh()
         self.put(buff, True)
+        self.stdscr.refresh()
         return buff
 
     def mainmenu(self):
