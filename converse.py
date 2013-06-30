@@ -53,12 +53,16 @@ class Converse():
                 buff += chr(keyin)
             elif keyin == curses.KEY_DL:  # TODO - broken keycode
                 buff = buff[:-1]
-            elif keyin == curses.KEY_UP:
+            elif keyin in [curses.KEY_DOWN, curses.KEY_UP]:
                 hist_commands = [(s,c) for s,c in self.backbuffer if c]
                 buff = hist_commands[-hist_counter][0]
                 self.stdscr.addstr(self.height-1, 0, "> %s" % buff)
-                if hist_counter < len(hist_commands) - 1:
-                    hist_counter += 1
+                if keyin == curses.KEY_UP:
+                    if hist_counter < len(hist_commands) - 1:
+                        hist_counter += 1
+                else:
+                    if hist_counter > 0:
+                        hist_counter -= 1
             elif keyin == curses.KEY_F1:
                 curses.endwin()
                 sys.exit()
