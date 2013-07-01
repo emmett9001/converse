@@ -158,5 +158,10 @@ class Shell():
             if ret_choice == constants.CHOICE_INVALID:
                 self.put("Invalid command")
 
+        return self
+
     def get_menu(self):
         return [a for a in self.menus if a.name == self.menu][0]
+
+    def end(self):
+        curses.endwin()

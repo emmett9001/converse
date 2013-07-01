@@ -1,5 +1,3 @@
-import curses
-
 from shell import Shell
 from command import Command, BackCommand, QuitCommand
 from menu import Menu
@@ -85,6 +83,4 @@ class Converse(Shell):
         self.menus = [main_menu, edit_menu]
 
 if __name__ == "__main__":
-    converse = Converse()
-    converse.main_loop()
-    curses.endwin()
+    Converse().main_loop().end()
