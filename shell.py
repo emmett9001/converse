@@ -16,6 +16,7 @@ class Shell():
         self.backbuffer = []
         self.height,self.width = self.stdscr.getmaxyx()
 
+        self.menus = []
 
     def resolve(self, user_in):
         if user_in == constants.COMMAND_QUIT:
@@ -27,19 +28,22 @@ class Shell():
         rev = list(self.backbuffer)
         rev.reverse()
         i = 0
-        for string, iscommand in rev:
-            ypos = self.height-2-i
-            if ypos > 0:
-                printstring = string
-                if iscommand:
-                    printstring = "> %s" % string
-                self.stdscr.addstr(ypos,0,printstring)
-            i += 1
-        self.stdscr.addstr(self.height-1, 0, output)
-        backbuf_string = output
-        to_append = (backbuf_string, command)
-        if output != "> ":
-            self.backbuffer.append(to_append)
+        if not output:
+            return
+        for line in output.split('\n'):
+            for string, iscommand in rev:
+                ypos = self.height-2-i
+                if ypos > 0:
+                    printstring = string
+                    if iscommand:
+                        printstring = "> %s" % string
+                    self.stdscr.addstr(ypos,0,printstring)
+                i += 1
+            self.stdscr.addstr(self.height-1, 0, line)
+            backbuf_string = line
+            to_append = (backbuf_string, command)
+            if line != "> ":
+                self.backbuffer.append(to_append)
 
     def shell_input(self, prompt):
         self.put(prompt)
@@ -70,13 +74,9 @@ class Shell():
         return buff
 
     def main_loop(self):
-        self.put("Converse! It's a thing")
-        self.put("options:")
-        self.put("  load [topicname]")
-        self.put("  new [topicname]")
-        self.put("  list")
-
         menu = 'main'
+        self.put(self.get_menu(menu).title)
+        self.put("options:\n%s" % self.get_menu(menu).options())
 
         ret_choice = None
         while ret_choice != constants.CHOICE_QUIT:
@@ -86,13 +86,18 @@ class Shell():
             if len(tokens) == 0:
                 self.put("Invalid command")
                 continue
-            for command in self.commands[menu]:
+            for command in self.get_menu(menu).commands:
                 if tokens[0] == command.name:
                     if not command.validate(tokens):
                         self.put("Missing parameter")
                     else:
                         ret_choice = command.run(tokens)
-                        menu = command.new_menu if command.new_menu else menu
+                        if command.new_menu:
+                            menu = command.new_menu
+                            self.put(self.get_menu(menu).title)
+                            self.put("options:\n%s" % self.get_menu(menu).options())
             if ret_choice == constants.CHOICE_INVALID:
                 self.put("Invalid command")
 
+    def get_menu(self, name):
+        return [a for a in self.menus if a.name == name][0]
