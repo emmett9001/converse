@@ -5,9 +5,6 @@ import constants
 
 
 class Shell():
-    # current working topic
-    _cwt = ""
-
     def __init__(self):
         self.stdscr = curses.initscr()
         curses.raw()
@@ -17,10 +14,6 @@ class Shell():
         self.height,self.width = self.stdscr.getmaxyx()
 
         self.menus = []
-
-    def resolve(self, user_in):
-        if user_in == constants.COMMAND_QUIT:
-            return constants.CHOICE_QUIT
 
     def put(self, output, command=False):
         self.stdscr.clear()
@@ -57,11 +50,11 @@ class Shell():
             elif keyin == curses.KEY_DL:  # TODO - broken keycode
                 buff = buff[:-1]
             elif keyin in [curses.KEY_DOWN, curses.KEY_UP]:
-                hist_commands = [(s,c) for s,c in self.backbuffer if c]
+                hist_commands = list(set([(s,c) for s,c in self.backbuffer if c]))
                 buff = hist_commands[-hist_counter][0]
                 self.stdscr.addstr(self.height-1, 0, "> %s" % buff)
                 if keyin == curses.KEY_UP:
-                    if hist_counter < len(hist_commands) - 1:
+                    if hist_counter < len(hist_commands):
                         hist_counter += 1
                 else:
                     if hist_counter > 0:
@@ -69,7 +62,7 @@ class Shell():
             elif keyin == curses.KEY_F1:
                 curses.endwin()
                 sys.exit()
-        self.put(buff, True)
+        self.put(buff, command=True)
         self.stdscr.refresh()
         return buff
 
