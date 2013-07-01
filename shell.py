@@ -17,6 +17,8 @@ class Shell():
         self.stickers = []
 
         self.header = ""
+        self._header_bottom = 0
+        self._header_right = 0
 
     def print_backbuffer(self):
         rev = list(self.backbuffer)
@@ -51,12 +53,25 @@ class Shell():
         ht = 0
         for line in self.header.split("\n"):
             self.stdscr.addstr(ht, 0, line)
+            if len(line) > self._header_right:
+                self._header_right = len(line)
             ht += 1
+        self._header_bottom = ht
 
     def print_stickers(self):
         for text,pos in self.stickers:
             _x,_y = pos
             self.stdscr.addstr(_x, _y, text)
+
+    def get_helpstring(self):
+        helpstring = "\n\n" + self.get_menu().title + "\n" + "-"*20 + "\n" + "options:\n%s" % self.get_menu().options()
+        return helpstring
+
+    def print_help(self):
+        ht = 0
+        for line in self.get_helpstring().split("\n"):
+            self.stdscr.addstr(ht, self._header_right + 10, line + " "*15)
+            ht += 1
 
     def update_screen(self):
         self.stdscr.clear()
@@ -64,8 +79,8 @@ class Shell():
 
         self.print_backbuffer()
         self.print_header()
+        self.print_help()
         self.print_stickers()
-
 
     def put(self, output, command=False, pos=None):
         self.update_screen()
@@ -118,14 +133,11 @@ class Shell():
         self.stdscr.refresh()
         return buff
 
-    def print_menu_header(self, menu):
-        self.put("\n\n" + self.get_menu(menu).title + "\n" + "-"*20)
-        self.put("options:\n%s" % self.get_menu(menu).options())
+    def print_menu_header(self):
+        self.put(self.get_helpstring())
 
     def main_loop(self):
-        menu = 'main'
-
-        self.print_menu_header(menu)
+        self.menu = 'main'
 
         ret_choice = None
         while ret_choice != constants.CHOICE_QUIT:
@@ -133,19 +145,18 @@ class Shell():
             choice = self._input("> ")
             tokens = choice.split()
             if len(tokens) == 0:
-                self.put("Invalid command")
+                self.put("\n")
                 continue
-            for command in self.get_menu(menu).commands:
+            for command in self.get_menu().commands:
                 if tokens[0] == command.name:
                     if not command.validate(tokens):
                         self.put("Missing parameter")
                     else:
                         ret_choice = command.run(tokens)
                         if command.new_menu:
-                            menu = command.new_menu
-                            self.print_menu_header(menu)
+                            self.menu = command.new_menu
             if ret_choice == constants.CHOICE_INVALID:
                 self.put("Invalid command")
 
-    def get_menu(self, name):
-        return [a for a in self.menus if a.name == name][0]
+    def get_menu(self):
+        return [a for a in self.menus if a.name == self.menu][0]

@@ -69,7 +69,7 @@ class Converse(Shell):
         quit_com = QuitCommand(self.name)
 
         main_menu = Menu('main')
-        main_menu.title = "Converse. It's a thing"
+        main_menu.title = "Main menu"
         main_menu.commands = [new_com, load_com, list_com, quit_com]
 
         edit_menu = Menu('edit')
