@@ -7,7 +7,6 @@ import constants
 class Shell():
     def __init__(self):
         self.stdscr = curses.initscr()
-        curses.raw()
         self.stdscr.keypad(1)
 
         self.backbuffer = []
@@ -61,8 +60,10 @@ class Shell():
 
     def print_stickers(self):
         for text,pos in self.stickers:
-            _x,_y = pos
-            self.stdscr.addstr(_x, _y, text)
+            _y,_x = pos
+            if _x + len(text) > self.width:
+                _x = self.width - len(text) - 1
+            self.stdscr.addstr(_y, _x, text)
 
     def get_helpstring(self):
         helpstring = "\n\n" + self.get_menu().title + "\n" + "-"*20 + "\n" + self.get_menu().options()
@@ -112,10 +113,11 @@ class Shell():
         hist_counter = 1
         while keyin != 10:
             keyin = self.stdscr.getch()
-            if keyin >= 32 and keyin <= 126:
-                buff += chr(keyin)
-            elif keyin == 46:  # TODO - broken keycode
+            #self.stdscr.addstr(20, 70, str(keyin))
+            if keyin in [46, 14, 263]:  # backspaces
                 buff = buff[:-1]
+                self.stdscr.addstr(self.height-1, 0, " "*(self.width-3))
+                self.stdscr.addstr(self.height-1, 0, "> %s" % buff)
             elif keyin in [curses.KEY_DOWN, curses.KEY_UP]:
                 hist_commands = [(s,c) for s,c in self.backbuffer if c]
                 hist_commands.reverse()
@@ -131,6 +133,8 @@ class Shell():
             elif keyin == curses.KEY_F1:
                 curses.endwin()
                 sys.exit()
+            elif keyin >= 32 and keyin <= 126:
+                buff += chr(keyin)
         self.put(buff, command=True)
         self.stdscr.refresh()
         return buff
