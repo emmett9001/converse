@@ -24,8 +24,8 @@ class Converse(Shell):
     def setup_menus(self):
         new_com = Command('new <topic>', 'Create a new topic')
         def _run(tokens):
-            self.put("new topic %s" % tokens[1])
-            self.cwt = tokens[1]
+            self.cwt = " ".join(tokens[1:])
+            self.put("New topic %s" % self.cwt)
             self.sticker("Topic: '%s'" % self.cwt)
             return constants.CHOICE_LOAD
         new_com.set_run_function(_run)
@@ -33,8 +33,8 @@ class Converse(Shell):
 
         load_com = Command('load <topic>', 'Load a previous topic')
         def _run(tokens):
-            self.put("Loading topic %s" % tokens[1])
-            self.cwt = tokens[1]
+            self.cwt = " ".join(tokens[1:])
+            self.put("Loaded topic %s" % self.cwt)
             self.sticker("Topic: '%s'" % self.cwt)
             return constants.CHOICE_NEW
         load_com.set_run_function(_run)
@@ -48,13 +48,13 @@ class Converse(Shell):
 
         sen_com = Command('sentence <tags> <text>', 'Create a new player sentence')
         def _run(tokens):
-            self.put("Sentence created: %s\nwith tag: %s" % (tokens[2], tokens[1]))
+            self.put("Sentence created: %s\nwith tag: %s" % (" ".join(tokens[2:]), tokens[1]))
             return constants.CHOICE_SENTENCE
         sen_com.set_run_function(_run)
 
         res_com = Command('response <sID> <chartype> <mood> <next_topic> text', 'Create a new NPC response')
         def _run(tokens):
-            self.put("NPC Response created: %s\nwith chartype: %s\nand mood: %s\nand topic: %s" % (tokens[5], tokens[2], tokens[3], tokens[4]))
+            self.put("NPC Response created: %s\nwith chartype: %s\nand mood: %s\nand topic: %s" % (" ".join(tokens[5:]), tokens[2], tokens[3], tokens[4]))
             return constants.CHOICE_RESPONSE
         res_com.set_run_function(_run)
 

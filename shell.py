@@ -35,6 +35,7 @@ class Shell():
             i += 1
 
     def sticker(self, output, pos=None):
+        # TODO - long stickers should not line wrap
         if len(self.stickers) > 0:
             sort = sorted(self.stickers, key=lambda x: x[1][0])
             ht = sort[0][1][0]+1
