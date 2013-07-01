@@ -15,16 +15,11 @@ class Shell():
 
         self.menus = []
 
-    def put(self, output, command=False):
-        self.stdscr.clear()
-        self.stdscr.refresh()
+    def print_backbuffer(self):
         rev = list(self.backbuffer)
         rev.reverse()
         i = 0
-        if not output:
-            return
 
-        # print backbuffer
         for string, iscommand in rev:
             ypos = self.height-2-i
             if ypos > 0:
@@ -34,15 +29,26 @@ class Shell():
                 self.stdscr.addstr(ypos,0,printstring)
             i += 1
 
-        # print current
+    def put(self, output, command=False):
+        self.stdscr.clear()
+        self.stdscr.refresh()
+
+        if not output:
+            return
+
+        self.print_backbuffer()
+
         for line in output.split('\n'):
+            # put the line
             self.stdscr.addstr(self.height-1, 0, line)
+
+            # add it to backbuffer
             backbuf_string = line
             to_append = (backbuf_string, command)
             if line != "> ":
                 self.backbuffer.append(to_append)
 
-    def shell_input(self, prompt):
+    def _input(self, prompt):
         self.put(prompt)
         keyin = ''
         buff = ''
@@ -79,7 +85,7 @@ class Shell():
         ret_choice = None
         while ret_choice != constants.CHOICE_QUIT:
             ret_choice = constants.CHOICE_INVALID
-            choice = self.shell_input("> ")
+            choice = self._input("> ")
             tokens = choice.split()
             if len(tokens) == 0:
                 self.put("Invalid command")
