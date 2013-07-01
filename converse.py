@@ -5,7 +5,7 @@ import constants
 from command import Command
 
 
-class Converse():
+class Shell():
     # current working topic
     _cwt = ""
 
@@ -17,43 +17,6 @@ class Converse():
         self.backbuffer = []
         self.height,self.width = self.stdscr.getmaxyx()
 
-        self.commands = {'main': [], 'edit': []}
-
-        com = Command('new <topic>')
-        def _run(tokens):
-            self.put("new topic %s" % tokens[1])
-            return constants.CHOICE_LOAD
-        com.set_run_function(_run)
-        com.new_menu = 'edit'
-        self.commands['main'].append(com)
-
-        com = Command('load <topic>')
-        def _run(tokens):
-            self.put("Loading topic %s" % tokens[1])
-            return constants.CHOICE_NEW
-        com.set_run_function(_run)
-        com.new_menu = 'edit'
-        self.commands['main'].append(com)
-
-        com = Command('list')
-        def _run(tokens):
-            self.put("Listing")
-            return constants.CHOICE_LIST
-        com.set_run_function(_run)
-        self.commands['main'].append(com)
-
-        com = Command('quit')
-        def _run(tokens):
-            return constants.CHOICE_QUIT
-        com.set_run_function(_run)
-        self.commands['main'].append(com)
-
-        com = Command('test')
-        def _run(tokens):
-            self.put("I worked!")
-            return constants.CHOICE_LIST
-        com.set_run_function(_run)
-        self.commands['edit'].append(com)
 
     def resolve(self, user_in):
         if user_in == constants.COMMAND_QUIT:
@@ -107,15 +70,17 @@ class Converse():
         self.stdscr.refresh()
         return buff
 
-    def mainmenu(self):
+    def main_loop(self):
         self.put("Converse! It's a thing")
         self.put("options:")
         self.put("  load [topicname]")
         self.put("  new [topicname]")
         self.put("  list")
+
         menu = 'main'
 
-        while True or ret_choice != constants.CHOICE_QUIT:
+        ret_choice = None
+        while ret_choice != constants.CHOICE_QUIT:
             ret_choice = constants.CHOICE_INVALID
             choice = self.shell_input("> ")
             tokens = choice.split()
@@ -132,21 +97,49 @@ class Converse():
             if ret_choice == constants.CHOICE_INVALID:
                 self.put("Invalid command")
 
-    def load_topic(self, topicname):
-        _cwt = topicname
-        put("I am loading %s" % topicname)
-
-    def new_topic(self, topicname):
-        _cwt = topicname
-        put("Created new topic %s" % topicname)
 
 if __name__ == "__main__":
 
-    converse = Converse()
-    converse.mainmenu()
+    converse = Shell()
 
-    #put(converse._cwt)
+    converse.commands = {'main': [], 'edit': []}
 
-    #converse.main_loop()
+    com = Command('new <topic>')
+    def _run(tokens):
+        converse.put("new topic %s" % tokens[1])
+        return constants.CHOICE_LOAD
+    com.set_run_function(_run)
+    com.new_menu = 'edit'
+    converse.commands['main'].append(com)
+
+    com = Command('load <topic>')
+    def _run(tokens):
+        converse.put("Loading topic %s" % tokens[1])
+        return constants.CHOICE_NEW
+    com.set_run_function(_run)
+    com.new_menu = 'edit'
+    converse.commands['main'].append(com)
+
+    com = Command('list')
+    def _run(tokens):
+        converse.put("Listing")
+        return constants.CHOICE_LIST
+    com.set_run_function(_run)
+    converse.commands['main'].append(com)
+
+    com = Command('quit')
+    def _run(tokens):
+        return constants.CHOICE_QUIT
+    com.set_run_function(_run)
+    converse.commands['main'].append(com)
+
+    com = Command('test')
+    def _run(tokens):
+        converse.put("I worked!")
+        return constants.CHOICE_LIST
+    com.set_run_function(_run)
+    converse.commands['edit'].append(com)
+
+    converse.main_loop()
 
     curses.endwin()
