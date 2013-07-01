@@ -23,15 +23,19 @@ class Shell():
         i = 0
         if not output:
             return
+
+        # print backbuffer
+        for string, iscommand in rev:
+            ypos = self.height-2-i
+            if ypos > 0:
+                printstring = string
+                if iscommand:
+                    printstring = "> %s" % string
+                self.stdscr.addstr(ypos,0,printstring)
+            i += 1
+
+        # print current
         for line in output.split('\n'):
-            for string, iscommand in rev:
-                ypos = self.height-2-i
-                if ypos > 0:
-                    printstring = string
-                    if iscommand:
-                        printstring = "> %s" % string
-                    self.stdscr.addstr(ypos,0,printstring)
-                i += 1
             self.stdscr.addstr(self.height-1, 0, line)
             backbuf_string = line
             to_append = (backbuf_string, command)
