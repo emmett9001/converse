@@ -15,6 +15,8 @@ class Shell():
 
         self.menus = []
 
+        self.stickers = []
+
     def print_backbuffer(self):
         rev = list(self.backbuffer)
         rev.reverse()
@@ -29,18 +31,38 @@ class Shell():
                 self.stdscr.addstr(ypos,0,printstring)
             i += 1
 
-    def put(self, output, command=False):
+    def sticker(self, output, pos=None):
+        if not pos:
+            pos = (3, self.width - 20)
+        sticker = (output, pos)
+        self.stickers.append(sticker)
+
+    def print_stickers(self):
+        for text,pos in self.stickers:
+            _x,_y = pos
+            self.stdscr.addstr(_x, _y, text)
+
+    def update_screen(self):
         self.stdscr.clear()
         self.stdscr.refresh()
+
+        self.print_backbuffer()
+        self.print_stickers()
+
+
+    def put(self, output, command=False, pos=None):
+        self.update_screen()
 
         if not output:
             return
 
-        self.print_backbuffer()
+        _x,_y = (self.height-1, 0)
+        if pos:
+            _x,_y = pos
 
         for line in output.split('\n'):
             # put the line
-            self.stdscr.addstr(self.height-1, 0, line)
+            self.stdscr.addstr(_x, _y, line)
 
             # add it to backbuffer
             backbuf_string = line
@@ -77,10 +99,14 @@ class Shell():
         self.stdscr.refresh()
         return buff
 
+    def print_menu_header(self, menu):
+        self.put("\n\n" + self.get_menu(menu).title + "\n" + "-"*20)
+        self.put("options:\n%s" % self.get_menu(menu).options())
+
     def main_loop(self):
         menu = 'main'
-        self.put(self.get_menu(menu).title)
-        self.put("options:\n%s" % self.get_menu(menu).options())
+
+        self.print_menu_header(menu)
 
         ret_choice = None
         while ret_choice != constants.CHOICE_QUIT:
@@ -98,8 +124,7 @@ class Shell():
                         ret_choice = command.run(tokens)
                         if command.new_menu:
                             menu = command.new_menu
-                            self.put(self.get_menu(menu).title)
-                            self.put("options:\n%s" % self.get_menu(menu).options())
+                            self.print_menu_header(menu)
             if ret_choice == constants.CHOICE_INVALID:
                 self.put("Invalid command")
 
