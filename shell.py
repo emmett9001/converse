@@ -64,7 +64,7 @@ class Shell():
             self.stdscr.addstr(_x, _y, text)
 
     def get_helpstring(self):
-        helpstring = "\n\n" + self.get_menu().title + "\n" + "-"*20 + "\n" + "options:\n%s" % self.get_menu().options()
+        helpstring = "\n\n" + self.get_menu().title + "\n" + "-"*20 + "\n" + self.get_menu().options()
         return helpstring
 
     def print_help(self):

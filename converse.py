@@ -28,7 +28,7 @@ class Converse(Shell):
         def _run(tokens):
             self.put("new topic %s" % tokens[1])
             self.cwt = tokens[1]
-            self.sticker("Topic: %s" % self.cwt)
+            self.sticker("Topic: '%s'" % self.cwt)
             return constants.CHOICE_LOAD
         new_com.set_run_function(_run)
         new_com.new_menu = 'edit'
@@ -37,7 +37,7 @@ class Converse(Shell):
         def _run(tokens):
             self.put("Loading topic %s" % tokens[1])
             self.cwt = tokens[1]
-            self.sticker("Topic: %s" % self.cwt)
+            self.sticker("Topic: '%s'" % self.cwt)
             return constants.CHOICE_NEW
         load_com.set_run_function(_run)
         load_com.new_menu = 'edit'
@@ -60,9 +60,15 @@ class Converse(Shell):
             return constants.CHOICE_RESPONSE
         res_com.set_run_function(_run)
 
+        list_topic_com = Command('list', 'Show current player sentences')
+        def _run(tokens):
+            self.put("Here they are")
+            return constants.CHOICE_LIST
+        list_topic_com.set_run_function(_run)
+
         back_com = BackCommand('main')
         def _run(tokens):
-            self.remove_sticker("Topic: %s" % self.cwt)
+            self.remove_sticker("Topic: '%s'" % self.cwt)
             return back_com.default_run(tokens)
         back_com.set_run_function(_run)
 
@@ -74,7 +80,7 @@ class Converse(Shell):
 
         edit_menu = Menu('edit')
         edit_menu.title = "Editing menu"
-        edit_menu.commands = [sen_com, res_com, back_com, quit_com]
+        edit_menu.commands = [sen_com, res_com, list_topic_com, back_com, quit_com]
 
         self.menus = [main_menu, edit_menu]
 
