@@ -80,6 +80,8 @@ class Converse(Shell):
         edit_menu.title = "Editing menu"
         edit_menu.commands = [sen_com, res_com, list_topic_com, back_com, quit_com]
 
+        # TODO - sticker list of existing sentences in the edit menu
+
         self.menus = [main_menu, edit_menu]
 
 if __name__ == "__main__":
