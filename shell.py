@@ -52,6 +52,7 @@ class Shell():
             elif keyin in [curses.KEY_DOWN, curses.KEY_UP]:
                 hist_commands = list(set([(s,c) for s,c in self.backbuffer if c]))
                 buff = hist_commands[-hist_counter][0]
+                self.stdscr.addstr(self.height-1, 0, " "*(self.width-3))
                 self.stdscr.addstr(self.height-1, 0, "> %s" % buff)
                 if keyin == curses.KEY_UP:
                     if hist_counter < len(hist_commands):
