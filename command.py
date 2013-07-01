@@ -1,4 +1,7 @@
-class Command():
+import constants
+
+
+class Command(object):
     def __init__(self, definition, description):
         self.definition = definition
         self.description = description
@@ -22,3 +25,26 @@ class Command():
 
     def set_run_function(self, func):
         self.run = func
+
+
+class BackCommand(Command):
+    def __init__(self, tomenu):
+        super(BackCommand, self).__init__('back', 'Back to the %s menu' % tomenu)
+        self.new_menu = tomenu
+
+        def _run(tokens):
+            return constants.CHOICE_BACK
+        self.set_run_function(_run)
+
+        self.default_run = _run
+
+
+class QuitCommand(Command):
+    def __init__(self, name):
+        super(QuitCommand, self).__init__('quit', 'Quit %s' % name)
+
+        def _run(tokens):
+            return constants.CHOICE_QUIT
+        self.set_run_function(_run)
+
+        self.default_run = _run

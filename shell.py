@@ -14,8 +14,9 @@ class Shell():
         self.height,self.width = self.stdscr.getmaxyx()
 
         self.menus = []
-
         self.stickers = []
+
+        self.header = ""
 
     def print_backbuffer(self):
         rev = list(self.backbuffer)
@@ -32,10 +33,25 @@ class Shell():
             i += 1
 
     def sticker(self, output, pos=None):
+        if len(self.stickers) > 0:
+            sort = sorted(self.stickers, key=lambda x: x[1][0])
+            ht = sort[0][1][0]+1
+        else:
+            ht = 3
+
         if not pos:
-            pos = (3, self.width - 20)
+            pos = (ht, self.width - 20)
         sticker = (output, pos)
         self.stickers.append(sticker)
+
+    def remove_sticker(self, text):
+        self.stickers = [a for a in self.stickers if a[0] != text]
+
+    def print_header(self):
+        ht = 0
+        for line in self.header.split("\n"):
+            self.stdscr.addstr(ht, 0, line)
+            ht += 1
 
     def print_stickers(self):
         for text,pos in self.stickers:
@@ -47,6 +63,7 @@ class Shell():
         self.stdscr.refresh()
 
         self.print_backbuffer()
+        self.print_header()
         self.print_stickers()
 
 
@@ -55,6 +72,8 @@ class Shell():
 
         if not output:
             return
+
+        output = str(output)
 
         _x,_y = (self.height-1, 0)
         if pos:
