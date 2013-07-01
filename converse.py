@@ -21,6 +21,9 @@ class Converse(Shell):
 
         self.setup_menus()
 
+        self.sentences = []
+        self._id_counter = 0
+
     def setup_menus(self):
         new_com = Command('new <topic>', 'Create a new topic')
         def _run(tokens):
@@ -48,7 +51,12 @@ class Converse(Shell):
 
         sen_com = Command('sentence <tags> <text>', 'Create a new player sentence')
         def _run(tokens):
-            self.put("Sentence created: %s\nwith tag: %s" % (" ".join(tokens[2:]), tokens[1]))
+            sentence = " ".join(tokens[2:])
+            tag = tokens[1]
+            self.put("Sentence created: %s\nwith tag: %s" % (sentence, tag))
+            tup = (self._id_counter,tag,sentence)
+            self.sentences.append(tup)
+            self._id_counter += 1
             return constants.CHOICE_SENTENCE
         sen_com.set_run_function(_run)
 
@@ -60,7 +68,8 @@ class Converse(Shell):
 
         list_topic_com = Command('list', 'Show current player sentences')
         def _run(tokens):
-            self.put("Here they are")
+            for _id,tag,sentence in self.sentences:
+                self.put("%d: %s (%s)" % (_id,sentence,tag))
             return constants.CHOICE_LIST
         list_topic_com.set_run_function(_run)
 
