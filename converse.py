@@ -57,10 +57,16 @@ class Converse(Shell):
         def _run(tokens):
             sentence = " ".join(tokens[2:])
             tag = tokens[1]
-            self.put("Sentence created: %s\nwith tag: %s" % (sentence, tag))
+
+            for sen in self.sentences:
+                if sen[2] == sentence:
+                    self.put("Duplicate sentence")
+                    return constants.CHOICE_SENTENCE
+
             tup = (self._id_counter,tag,sentence)
             self.sentences.append(tup)
             self._id_counter += 1
+            self.put("Sentence created: %s\nwith tag: %s" % (sentence, tag))
             return constants.CHOICE_SENTENCE
         sen_com.set_run_function(_run)
 
@@ -71,12 +77,18 @@ class Converse(Shell):
             _type = tokens[2]
             mood = tokens[3]
             _next = tokens[4]
-            self.put("NPC Response created: %s\nwith chartype: %s\nand mood: %s\nand topic: %s" % (text, _type, mood, _next))
 
             tup = (mood,_next,text)
             if _type not in self.responses[sen_id].keys():
                 self.responses[sen_id][_type] = []
+
+            for res in self.responses[sen_id][_type]:
+                if mood == res[0]:
+                    self.put("Duplicate mood: %s" % mood)
+                    return constants.CHOICE_RESPONSE
+
             self.responses[sen_id][_type].append(tup)
+            self.put("NPC Response created: %s\nwith chartype: %s\nand mood: %s\nand topic: %s" % (text, _type, mood, _next))
 
             return constants.CHOICE_RESPONSE
         res_com.set_run_function(_run)
@@ -92,22 +104,60 @@ class Converse(Shell):
             return constants.CHOICE_LIST
         list_topic_com.set_run_function(_run)
 
+        del_res_com = Command('delete <sen_id> <type> <mood>', 'Delete an NPC response')
+        def _run(tokens):
+            sen_id = int(tokens[1])
+            _type = tokens[2]
+            mood = tokens[3]
+            if _type in self.responses[sen_id].keys():
+                for res in self.responses[sen_id][_type]:
+                    if res[0] == mood:
+                        to_remove = res
+                        break
+                self.responses[sen_id][_type] = [a for a
+                    in self.responses[sen_id][_type] if a != to_remove]
+                if len(self.responses[sen_id][_type]) == 0:
+                    self.responses[sen_id].pop(_type)
+                self.put("Deleted %s %s response to %d" % (_type, mood, sen_id))
+            else:
+                self.put("No matching response found.")
+            return constants.CHOICE_DELETE_RESPONSE
+        del_res_com.set_run_function(_run)
+
+        del_sen_com = Command('delete <sen_id>', 'Delete the sentence with the given ID')
+        def _run(tokens):
+            sen_id = int(tokens[1])
+            for sen in self.sentences:
+                if sen[0] == sen_id:
+                    to_remove = sen
+                    break
+            self.sentences = [a for a in self.sentences if a != to_remove]
+
+            self.responses.pop(sen_id)
+
+            self.put("Removed sentence '%s' and all responses" % to_remove[2])
+            return constants.CHOICE_DELETE_SENTENCE
+        del_sen_com.set_run_function(_run)
+
+        # builtins
         back_com = BackCommand('main')
         def _run(tokens):
             self.remove_sticker("Topic: '%s'" % self.cwt)
             return back_com.default_run(tokens)
         back_com.set_run_function(_run)
-
         quit_com = QuitCommand(self.name)
         run_com = RunScriptCommand(self)
 
+        defaults = [quit_com, run_com]
+
         main_menu = Menu('main')
         main_menu.title = "Main menu"
-        main_menu.commands = [new_com, load_com, list_com, quit_com, run_com]
+        main_menu.commands = [new_com, load_com, list_com] + defaults
 
         edit_menu = Menu('edit')
         edit_menu.title = "Editing menu"
-        edit_menu.commands = [sen_com, res_com, list_topic_com, back_com, quit_com, run_com]
+        edit_menu.commands = [sen_com, res_com, list_topic_com, back_com,
+                              del_res_com, del_sen_com] + defaults
 
         # TODO - sticker list of existing sentences in the edit menu
 
