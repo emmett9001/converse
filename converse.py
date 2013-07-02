@@ -57,16 +57,7 @@ class Converse(Shell):
         def _run(tokens):
             sentence = " ".join(tokens[2:])
             tag = tokens[1]
-
-            for sen in self.sentences:
-                if sen[2] == sentence:
-                    self.put("Duplicate sentence")
-                    return constants.CHOICE_SENTENCE
-
-            tup = (self._id_counter,tag,sentence)
-            self.sentences.append(tup)
-            self._id_counter += 1
-            self.put("Sentence created: %s\nwith tag: %s" % (sentence, tag))
+            self.create_sentence(tag, sentence)
             return constants.CHOICE_SENTENCE
         sen_com.set_run_function(_run)
 
@@ -77,30 +68,13 @@ class Converse(Shell):
             _type = tokens[2]
             mood = tokens[3]
             _next = tokens[4]
-
-            tup = (mood,_next,text)
-            if _type not in self.responses[sen_id].keys():
-                self.responses[sen_id][_type] = []
-
-            for res in self.responses[sen_id][_type]:
-                if mood == res[0]:
-                    self.put("Duplicate mood: %s" % mood)
-                    return constants.CHOICE_RESPONSE
-
-            self.responses[sen_id][_type].append(tup)
-            self.put("NPC Response created: %s\nwith chartype: %s\nand mood: %s\nand topic: %s" % (text, _type, mood, _next))
-
+            self.create_response(sen_id, _type, mood, _next, text)
             return constants.CHOICE_RESPONSE
         res_com.set_run_function(_run)
 
         list_topic_com = Command('list', 'Show current player sentences')
         def _run(tokens):
-            for _id,tag,sentence in self.sentences:
-                self.put("%d: %s (%s)" % (_id,sentence,tag))
-                for _type in self.responses[_id]:
-                    self.put("  %s" % _type)
-                    for mood,_next,text in self.responses[_id][_type]:
-                        self.put("    %s (%s) -> %s" % (text, mood, _next))
+            self.list_topic()
             return constants.CHOICE_LIST
         list_topic_com.set_run_function(_run)
 
@@ -109,34 +83,14 @@ class Converse(Shell):
             sen_id = int(tokens[1])
             _type = tokens[2]
             mood = tokens[3]
-            if _type in self.responses[sen_id].keys():
-                for res in self.responses[sen_id][_type]:
-                    if res[0] == mood:
-                        to_remove = res
-                        break
-                self.responses[sen_id][_type] = [a for a
-                    in self.responses[sen_id][_type] if a != to_remove]
-                if len(self.responses[sen_id][_type]) == 0:
-                    self.responses[sen_id].pop(_type)
-                self.put("Deleted %s %s response to %d" % (_type, mood, sen_id))
-            else:
-                self.put("No matching response found.")
+            self.delete_response(sen_id, _type, mood)
             return constants.CHOICE_DELETE_RESPONSE
         del_res_com.set_run_function(_run)
 
-        # TODO - this and the above collide since they have the same name
-        del_sen_com = Command('delete_s <sen_id>', 'Delete the sentence with the given ID')
+        del_sen_com = Command('delete_s <sen_id>', 'Delete sentence by ID')
         def _run(tokens):
             sen_id = int(tokens[1])
-            for sen in self.sentences:
-                if sen[0] == sen_id:
-                    to_remove = sen
-                    break
-            self.sentences = [a for a in self.sentences if a != to_remove]
-
-            self.responses.pop(sen_id)
-
-            self.put("Removed sentence '%s' and all responses" % to_remove[2])
+            self.delete_sentence(sen_id)
             return constants.CHOICE_DELETE_SENTENCE
         del_sen_com.set_run_function(_run)
 
@@ -163,6 +117,62 @@ class Converse(Shell):
         # TODO - sticker list of existing sentences in the edit menu
 
         self.menus = [main_menu, edit_menu]
+
+    def list_topic(self):
+        for _id,tag,sentence in self.sentences:
+            self.put("%d: %s (%s)" % (_id,sentence,tag))
+            for _type in self.responses[_id]:
+                self.put("  %s" % _type)
+                for mood,_next,text in self.responses[_id][_type]:
+                    self.put("    %s (%s) -> %s" % (text, mood, _next))
+
+    def create_response(self, sen_id, _type, mood, _next, text):
+        tup = (mood,_next,text)
+        if _type not in self.responses[sen_id].keys():
+            self.responses[sen_id][_type] = []
+
+        for res in self.responses[sen_id][_type]:
+            if mood == res[0]:
+                self.put("Duplicate mood: %s" % mood)
+                return
+
+        self.responses[sen_id][_type].append(tup)
+        self.put("NPC Response created: %s\nwith chartype: %s\nand mood: %s\nand topic: %s" % (text, _type, mood, _next))
+
+    def delete_response(self, sen_id, _type, mood):
+        if _type in self.responses[sen_id].keys():
+            for res in self.responses[sen_id][_type]:
+                if res[0] == mood:
+                    to_remove = res
+                    break
+            self.responses[sen_id][_type] = [a for a
+                in self.responses[sen_id][_type] if a != to_remove]
+            if len(self.responses[sen_id][_type]) == 0:
+                self.responses[sen_id].pop(_type)
+            self.put("Deleted %s %s response to %d" % (_type, mood, sen_id))
+        else:
+            self.put("No matching response found.")
+
+    def create_sentence(self, tag, sentence):
+        for sen in self.sentences:
+            if sen[2] == sentence:
+                self.put("Duplicate sentence")
+                return
+
+        tup = (self._id_counter,tag,sentence)
+        self.sentences.append(tup)
+        self._id_counter += 1
+        self.put("Sentence created: %s\nwith tag: %s" % (sentence, tag))
+
+    def delete_sentence(self, sen_id):
+        for sen in self.sentences:
+            if sen[0] == sen_id:
+                to_remove = sen
+                break
+
+        self.sentences = [a for a in self.sentences if a != to_remove]
+        self.responses.pop(sen_id)
+        self.put("Removed sentence '%s' and all responses" % to_remove[2])
 
 if __name__ == "__main__":
     arg = None
