@@ -16,9 +16,14 @@ class Command(object):
         self.name = definition.split()[0]
 
         self.new_menu = ''
+        self.aliases = []
 
     def __str__(self):
         return "%s\n    %s" % (self.definition, self.description)
+
+    def alias(self, alias):
+        if alias not in self.aliases:
+            self.aliases.append(alias)
 
     def set_validate_function(self, func):
         self.validate = func

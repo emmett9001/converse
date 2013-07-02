@@ -77,6 +77,7 @@ class Converse(Shell):
             self.list_topic()
             return constants.CHOICE_LIST
         list_topic_com.set_run_function(_run)
+        list_topic_com.alias('ls')
 
         del_res_com = Command('delete_r <sen_id> <type> <mood>', 'Delete an NPC response')
         def _run(tokens):

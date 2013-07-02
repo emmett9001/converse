@@ -160,7 +160,7 @@ class Shell():
         if not hist_commands:
             return
 
-        hist_commands.reverse()
+        #hist_commands.reverse()
 
         buff = hist_commands[-hist_counter][0]
 
@@ -203,7 +203,7 @@ class Shell():
                 self.put("\n")
                 continue
             for command in self.get_menu().commands:
-                if tokens[0] == command.name:
+                if tokens[0] == command.name or tokens[0] in command.aliases:
                     if not command.validate(tokens):
                         self.put("Missing parameter")
                     else:
