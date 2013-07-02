@@ -2,7 +2,7 @@ from collections import defaultdict
 import sys
 
 from shell import Shell
-from command import Command, BackCommand, QuitCommand
+from command import Command, BackCommand, QuitCommand, RunScriptCommand
 from menu import Menu
 import constants
 
@@ -13,11 +13,11 @@ class Converse(Shell):
         self.name = "Converse"
 
         self.header = """
-   ____
-  / ___|___  _ ____   _____ _ __ ___  ___
- | |   / _ \| '_ \ \ / / _ \ '__/ __|/ _ \\
- | |__| (_) | | | \ V /  __/ |  \__ \  __/
-  \____\___/|_| |_|\_/ \___|_|  |___/\___|
+   ____                                                    
+  / ___|___  _ ____   _____ _ __ ___  ___                  
+ | |   / _ \| '_ \ \ / / _ \ '__/ __|/ _ \\                
+ | |__| (_) | | | \ V /  __/ |  \__ \  __/                 
+  \____\___/|_| |_|\_/ \___|_|  |___/\___|                 
                                            by Emmett Butler"""
 
         self.cwt = ''
@@ -99,14 +99,15 @@ class Converse(Shell):
         back_com.set_run_function(_run)
 
         quit_com = QuitCommand(self.name)
+        run_com = RunScriptCommand(self)
 
         main_menu = Menu('main')
         main_menu.title = "Main menu"
-        main_menu.commands = [new_com, load_com, list_com, quit_com]
+        main_menu.commands = [new_com, load_com, list_com, quit_com, run_com]
 
         edit_menu = Menu('edit')
         edit_menu.title = "Editing menu"
-        edit_menu.commands = [sen_com, res_com, list_topic_com, back_com, quit_com]
+        edit_menu.commands = [sen_com, res_com, list_topic_com, back_com, quit_com, run_com]
 
         # TODO - sticker list of existing sentences in the edit menu
 

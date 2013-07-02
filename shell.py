@@ -19,6 +19,8 @@ class Shell():
         self.menus = []
         self.stickers = []
 
+        self.should_show_help = True
+
         self.header = ""
         self._header_bottom = 0
         self._header_right = 0
@@ -33,6 +35,10 @@ class Shell():
         except Exception as e:
             return
         return script_lines
+
+    def runscript(self, scriptfile):
+        self.script_lines = self.parse_script_file(scriptfile)
+        self.script_counter = 0
 
     def print_backbuffer(self):
         rev = list(self.backbuffer)
@@ -84,9 +90,14 @@ class Shell():
         return helpstring
 
     def print_help(self):
+        helpstrings = [" %s" % a for a in self.get_helpstring().split("\n")]
         ht = 0
-        for line in self.get_helpstring().split("\n"):
-            self.stdscr.addstr(ht, self._header_right + 10, line + " "*15)
+        longest = len(max(helpstrings, key=len))
+        _x = self._header_right + 30
+        if _x + longest > self.width:
+            _x = self.width - longest - 1
+        for line in helpstrings:
+            self.stdscr.addstr(ht, _x, line + " "*15)
             ht += 1
 
     def update_screen(self):
@@ -95,7 +106,8 @@ class Shell():
 
         self.print_backbuffer()
         self.print_header()
-        self.print_help()
+        if self.should_show_help:
+            self.print_help()
         self.print_stickers()
 
     def put(self, output, command=False, pos=None):
@@ -133,17 +145,7 @@ class Shell():
                 self.stdscr.addstr(self.height-1, 0, " "*(self.width-3))
                 self.stdscr.addstr(self.height-1, 0, "> %s" % buff)
             elif keyin in [curses.KEY_DOWN, curses.KEY_UP]:
-                hist_commands = [(s,c) for s,c in self.backbuffer if c]
-                hist_commands.reverse()
-                buff = hist_commands[-hist_counter][0]
-                self.stdscr.addstr(self.height-1, 0, " "*(self.width-3))
-                self.stdscr.addstr(self.height-1, 0, "> %s" % buff)
-                if keyin == curses.KEY_UP:
-                    if hist_counter < len(hist_commands):
-                        hist_counter += 1
-                else:
-                    if hist_counter > 0:
-                        hist_counter -= 1
+                hist_counter,buff = self.process_history_command(keyin, hist_counter)
             elif keyin == curses.KEY_F1:
                 curses.endwin()
                 sys.exit()
@@ -152,6 +154,24 @@ class Shell():
         self.put(buff, command=True)
         self.stdscr.refresh()
         return buff
+
+    def process_history_command(self, keyin, hist_counter):
+        hist_commands = [(s,c) for s,c in self.backbuffer if c]
+        if not hist_commands:
+            return
+
+        hist_commands.reverse()
+
+        buff = hist_commands[-hist_counter][0]
+
+        self.stdscr.addstr(self.height-1, 0, " "*(self.width-3))
+        self.stdscr.addstr(self.height-1, 0, "> %s" % buff)
+
+        if keyin == curses.KEY_UP and hist_counter < len(hist_commands):
+            hist_counter += 1
+        elif keyin == curses.KEY_DOWN and hist_counter > 0:
+            hist_counter -= 1
+        return hist_counter, buff
 
     def print_menu_header(self):
         self.put(self.get_helpstring())
@@ -174,7 +194,9 @@ class Shell():
         while ret_choice != constants.CHOICE_QUIT:
             ret_choice = constants.CHOICE_INVALID
             choice = self.script_in()
-            if not choice:
+            if choice:
+                self.put("> %s" % choice)
+            else:
                 choice = self._input("> ")
             tokens = choice.split()
             if len(tokens) == 0:

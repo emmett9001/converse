@@ -48,3 +48,16 @@ class QuitCommand(Command):
         self.set_run_function(_run)
 
         self.default_run = _run
+
+
+class RunScriptCommand(Command):
+    def __init__(self, shell):
+        super(RunScriptCommand, self).__init__('run <scriptfile>', 'Run a script')
+
+        self.shell = shell
+
+        def _run(tokens):
+            self.shell.runscript(tokens[1])
+        self.set_run_function(_run)
+
+        self.default_run = _run
