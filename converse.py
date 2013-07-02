@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from shell import Shell
 from command import Command, BackCommand, QuitCommand
 from menu import Menu
@@ -22,6 +24,7 @@ class Converse(Shell):
         self.setup_menus()
 
         self.sentences = []
+        self.responses = defaultdict(dict)
         self._id_counter = 0
 
     def setup_menus(self):
@@ -62,7 +65,18 @@ class Converse(Shell):
 
         res_com = Command('response <sID> <chartype> <mood> <next_topic> text', 'Create a new NPC response')
         def _run(tokens):
-            self.put("NPC Response created: %s\nwith chartype: %s\nand mood: %s\nand topic: %s" % (" ".join(tokens[5:]), tokens[2], tokens[3], tokens[4]))
+            text = " ".join(tokens[5:])
+            sen_id = int(tokens[1])
+            _type = tokens[2]
+            mood = tokens[3]
+            _next = tokens[4]
+            self.put("NPC Response created: %s\nwith chartype: %s\nand mood: %s\nand topic: %s" % (text, _type, mood, _next))
+
+            tup = (mood,_next,text)
+            if _type not in self.responses[sen_id].keys():
+                self.responses[sen_id][_type] = []
+            self.responses[sen_id][_type].append(tup)
+
             return constants.CHOICE_RESPONSE
         res_com.set_run_function(_run)
 
@@ -70,6 +84,10 @@ class Converse(Shell):
         def _run(tokens):
             for _id,tag,sentence in self.sentences:
                 self.put("%d: %s (%s)" % (_id,sentence,tag))
+                for _type in self.responses[_id]:
+                    self.put("  %s" % _type)
+                    for mood,_next,text in self.responses[_id][_type]:
+                        self.put("    %s (%s) -> %s" % (text, mood, _next))
             return constants.CHOICE_LIST
         list_topic_com.set_run_function(_run)
 
