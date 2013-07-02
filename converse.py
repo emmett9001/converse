@@ -1,4 +1,5 @@
 from collections import defaultdict
+import sys
 
 from shell import Shell
 from command import Command, BackCommand, QuitCommand
@@ -6,8 +7,8 @@ from menu import Menu
 import constants
 
 class Converse(Shell):
-    def __init__(self):
-        Shell.__init__(self)
+    def __init__(self, scriptfile):
+        Shell.__init__(self, scriptfile)
 
         self.name = "Converse"
 
@@ -112,4 +113,7 @@ class Converse(Shell):
         self.menus = [main_menu, edit_menu]
 
 if __name__ == "__main__":
-    Converse().main_loop().end()
+    arg = None
+    if len(sys.argv) > 1:
+        arg = sys.argv[1]
+    Converse(arg).main_loop().end()

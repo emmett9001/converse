@@ -5,7 +5,11 @@ import constants
 
 
 class Shell():
-    def __init__(self):
+    def __init__(self, scriptfile):
+        self.script_lines = self.parse_script_file(scriptfile)
+        self.script_counter = 0
+        self.scriptfile = ""
+
         self.stdscr = curses.initscr()
         self.stdscr.keypad(1)
 
@@ -18,6 +22,17 @@ class Shell():
         self.header = ""
         self._header_bottom = 0
         self._header_right = 0
+
+    def parse_script_file(self, filename):
+        self.scriptfile = filename
+        try:
+            f = open(filename, 'r')
+            script_lines = f.readlines()
+            script_lines = [a.strip('\n') for a in script_lines]
+            f.close()
+        except Exception as e:
+            return
+        return script_lines
 
     def print_backbuffer(self):
         rev = list(self.backbuffer)
@@ -141,13 +156,26 @@ class Shell():
     def print_menu_header(self):
         self.put(self.get_helpstring())
 
+    def script_in(self):
+        if not self.script_lines:
+            return None
+
+        if self.script_counter < len(self.script_lines):
+            command = self.script_lines[self.script_counter]
+            self.script_counter += 1
+        else:
+            command = None
+        return command
+
     def main_loop(self):
         self.menu = 'main'
 
         ret_choice = None
         while ret_choice != constants.CHOICE_QUIT:
             ret_choice = constants.CHOICE_INVALID
-            choice = self._input("> ")
+            choice = self.script_in()
+            if not choice:
+                choice = self._input("> ")
             tokens = choice.split()
             if len(tokens) == 0:
                 self.put("\n")
