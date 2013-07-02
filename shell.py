@@ -113,7 +113,7 @@ class Shell():
         while keyin != 10:
             keyin = self.stdscr.getch()
             #self.stdscr.addstr(20, 70, str(keyin))
-            if keyin in [46, 14, 263]:  # backspaces
+            if keyin in [46, 14, 127, 263]:  # backspaces
                 buff = buff[:-1]
                 self.stdscr.addstr(self.height-1, 0, " "*(self.width-3))
                 self.stdscr.addstr(self.height-1, 0, "> %s" % buff)
