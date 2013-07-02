@@ -26,6 +26,13 @@ class Command(object):
     def set_run_function(self, func):
         self.run = func
 
+    def num_required_args(self):
+        counter = 0
+        for token in self.definition.split():
+            if token.startswith("<") and token.endswith(">"):
+                counter += 1
+        return counter
+
 
 class BackCommand(Command):
     def __init__(self, tomenu):

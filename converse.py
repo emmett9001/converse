@@ -104,7 +104,7 @@ class Converse(Shell):
             return constants.CHOICE_LIST
         list_topic_com.set_run_function(_run)
 
-        del_res_com = Command('delete <sen_id> <type> <mood>', 'Delete an NPC response')
+        del_res_com = Command('delete_r <sen_id> <type> <mood>', 'Delete an NPC response')
         def _run(tokens):
             sen_id = int(tokens[1])
             _type = tokens[2]
@@ -124,7 +124,8 @@ class Converse(Shell):
             return constants.CHOICE_DELETE_RESPONSE
         del_res_com.set_run_function(_run)
 
-        del_sen_com = Command('delete <sen_id>', 'Delete the sentence with the given ID')
+        # TODO - this and the above collide since they have the same name
+        del_sen_com = Command('delete_s <sen_id>', 'Delete the sentence with the given ID')
         def _run(tokens):
             sen_id = int(tokens[1])
             for sen in self.sentences:
