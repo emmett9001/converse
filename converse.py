@@ -140,8 +140,8 @@ class Converse(Shell):
 
         edit_menu = Menu('edit')
         edit_menu.title = "Editing menu"
-        edit_menu.commands = [sen_com, res_com, list_topic_com, back_com,
-                              del_res_com, del_sen_com, write_com] + defaults
+        edit_menu.commands = [sen_com, del_sen_com, res_com, del_res_com,
+                              list_topic_com, back_com, write_com] + defaults
 
         # TODO - sticker list of existing sentences in the edit menu
 
@@ -155,7 +155,8 @@ class Converse(Shell):
             self.put("  " + f)
 
     def get_available_topics(self):
-        files = [f.strip('.xml') for f in listdir('.') if isfile(join('.',f)) and f.endswith('.xml')]
+        files = [f.strip('.xml') for f in listdir('.') if \
+                 isfile(join('.',f)) and f.endswith('.xml')]
         return files
 
     def list_topic(self):
