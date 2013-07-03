@@ -43,9 +43,15 @@ class Converse(Shell):
     def setup_menus(self):
         new_com = Command('new <topic>', 'Create a new topic')
         def _run(tokens):
-            self.cwt = " ".join(tokens[1:])
-            self.put("New topic %s" % self.cwt)
-            self.sticker("Topic: '%s'" % self.cwt)
+            topic = " ".join(tokens[1:])
+            if topic in self.get_available_topics():
+                self.put("Topic %s already exists." % topic)
+                self.load_file(topic)
+                self.sticker("Topic: '%s'" % self.cwt)
+            else:
+                self.cwt = topic
+                self.put("New topic %s" % self.cwt)
+                self.sticker("Topic: '%s'" % self.cwt)
             return constants.CHOICE_NEW
         new_com.set_run_function(_run)
         new_com.new_menu = 'edit'
@@ -143,10 +149,14 @@ class Converse(Shell):
         self.menu = 'main'  # TODO - hide this somehow?
 
     def list_topic_files(self):
-        files = [f for f in listdir('.') if isfile(join('.',f)) and f.endswith('.xml')]
-        self.put("Available files:")
+        files = self.get_available_topics()
+        self.put("Available topics:")
         for f in files:
             self.put("  " + f)
+
+    def get_available_topics(self):
+        files = [f.strip('.xml') for f in listdir('.') if isfile(join('.',f)) and f.endswith('.xml')]
+        return files
 
     def list_topic(self):
         for _id,tag,sentence in self.sentences:
