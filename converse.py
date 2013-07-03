@@ -4,7 +4,8 @@ from shutil import copyfile
 import os
 import time
 
-from xml.etree.ElementTree import Element, SubElement, tostring
+from xml.etree import ElementTree as ET
+from xml.etree.ElementTree import Element, SubElement
 
 from shell import Shell
 from command import Command, BackCommand, QuitCommand, RunScriptCommand
@@ -26,15 +27,16 @@ class Converse(Shell):
   \____\___/|_| |_|\_/ \___|_|  |___/\___|                 
                                            by Emmett Butler"""
 
-        self.cwt = ''  # current working topic
-
         self.setup_menus()
+        self.default_state()
 
+        self.sticker("Autosave On")
+
+    def default_state(self):
+        self.cwt = ''  # current working topic
         self.sentences = []
         self.responses = defaultdict(dict)
         self._id_counter = 0
-
-        self.sticker("Autosave On")
 
     def setup_menus(self):
         new_com = Command('new <topic>', 'Create a new topic')
@@ -48,8 +50,8 @@ class Converse(Shell):
 
         load_com = Command('load <topic>', 'Load a previous topic')
         def _run(tokens):
-            self.cwt = " ".join(tokens[1:])
-            self.put("Loaded topic %s" % self.cwt)
+            topic = " ".join(tokens[1:])
+            self.load_file(topic)
             self.sticker("Topic: '%s'" % self.cwt)
             return constants.CHOICE_NEW
         load_com.set_run_function(_run)
@@ -113,6 +115,7 @@ class Converse(Shell):
         back_com = BackCommand('main')
         def _run(tokens):
             self.remove_sticker("Topic: '%s'" % self.cwt)
+            self.unload_file(self.cwt)
             return back_com.default_run(tokens)
         back_com.set_run_function(_run)
         quit_com = QuitCommand(self.name)
@@ -195,10 +198,22 @@ class Converse(Shell):
         self.write_out()
         self.put("Removed sentence '%s' and all responses" % to_remove[2])
 
-    def load_file(self):
-        self.put("I'm loading")
+    def load_file(self, topic):
+        filename = "%s.xml" % topic
+        self.sticker("Loading %s" % filename)
+
+        tree = ET.parse(filename)
+        self._parse_tree(tree.getroot())
+
+        def reset_sticker():
+            time.sleep(.1)
+            self.remove_sticker("Loading %s" % filename)
+            self.put("Success loading %s" % filename)
+        self.timeout(reset_sticker)
 
     def unload_file(self, topic):
+        self.write_out()
+        self.default_state()
         self.put("Unloaded %s" % topic)
 
     def write_out(self, from_command=False):
@@ -209,12 +224,12 @@ class Converse(Shell):
             shutil.copyfile('%s.xml' % self.cwt, '%s.xml.swp' % self.cwt)
         else:
             f = open('%s.xml.swp' % self.cwt, "w+")
-            f.write(tostring(tree))
+            f.write(ET.tostring(tree))
             f.close()
 
         try:
             f = open('%s.xml' % self.cwt, "w+")
-            f.write(tostring(tree))
+            f.write(ET.tostring(tree))
             f.close()
         except:
             if from_command:
@@ -258,6 +273,21 @@ class Converse(Shell):
                         mood_element.set('next', _next)
                         mood_element.text = response
         return root
+
+    def _parse_tree(self, root):
+        self.cwt = root.attrib['name']
+        for sentence in root:
+            text = sentence.find('text').text
+            tup = (self._id_counter, sentence.attrib['tag'], text)
+            self.sentences.append(tup)
+            self.responses[self._id_counter] = {}
+            for chartype in sentence.find('responses'):
+                _type = chartype.attrib['type']
+                self.responses[self._id_counter][_type] = []
+                for mood in chartype:
+                    tup = (mood.attrib['type'],mood.attrib['next'],mood.text)
+                    self.responses[self._id_counter][_type].append(tup)
+            self._id_counter += 1
 
 
 if __name__ == "__main__":

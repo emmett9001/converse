@@ -70,9 +70,8 @@ class Shell():
             if output == text:
                 match = (text,_pos)
                 break
-        # remove matching sticker
-        self.stickers = [a for a in self.stickers if a != match]
-        # add replacement text
+        if match:
+            self.remove_sticker(match[0])
 
         sticker = (new_output or output, match[1] if match else pos)
         self.stickers.append(sticker)
