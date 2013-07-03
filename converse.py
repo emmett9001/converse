@@ -155,7 +155,7 @@ class Converse(Shell):
             self.put("  " + f)
 
     def get_available_topics(self):
-        files = [f.strip('.xml') for f in listdir('.') if \
+        files = [f[:-4] for f in listdir('.') if \
                  isfile(join('.',f)) and f.endswith('.xml')]
         return files
 
