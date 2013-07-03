@@ -1,5 +1,9 @@
 from collections import defaultdict
 import sys
+from shutil import copyfile
+import os
+
+from xml.etree.ElementTree import Element, SubElement, tostring
 
 from shell import Shell
 from command import Command, BackCommand, QuitCommand, RunScriptCommand
@@ -20,7 +24,7 @@ class Converse(Shell):
   \____\___/|_| |_|\_/ \___|_|  |___/\___|                 
                                            by Emmett Butler"""
 
-        self.cwt = ''
+        self.cwt = ''  # current working topic
 
         self.setup_menus()
 
@@ -95,6 +99,12 @@ class Converse(Shell):
             return constants.CHOICE_DELETE_SENTENCE
         del_sen_com.set_run_function(_run)
 
+        write_com = Command('save', 'Save to a file')
+        def _run(tokens):
+            self.write_out()
+            return constants.CHOICE_WRITE
+        write_com.set_run_function(_run)
+
         # builtins
         back_com = BackCommand('main')
         def _run(tokens):
@@ -113,7 +123,7 @@ class Converse(Shell):
         edit_menu = Menu('edit')
         edit_menu.title = "Editing menu"
         edit_menu.commands = [sen_com, res_com, list_topic_com, back_com,
-                              del_res_com, del_sen_com] + defaults
+                              del_res_com, del_sen_com, write_com] + defaults
 
         # TODO - sticker list of existing sentences in the edit menu
 
@@ -174,6 +184,57 @@ class Converse(Shell):
         self.sentences = [a for a in self.sentences if a != to_remove]
         self.responses.pop(sen_id)
         self.put("Removed sentence '%s' and all responses" % to_remove[2])
+
+    def write_out(self):
+        tree = self._build_tree()
+
+        if self._file_exists('%s.xml' % self.cwt):
+            shutil.copyfile('%s.xml' % self.cwt, '%s.xml.swp' % self.cwt)
+        else:
+            f = open('%s.xml.swp' % self.cwt, "w+")
+            f.write(tostring(tree))
+            f.close()
+
+        try:
+            f = open('%s.xml' % self.cwt, "w+")
+            f.write(tostring(tree))
+            f.close()
+        except:
+            self.put("Failed to write file")
+            # restore from swap
+            shutil.copyfile('%s.xml.swp' % self.cwt, '%s.xml' % self.cwt)
+        else:
+            self.put("Success writing file %s.xml" % self.cwt)
+            # remove swap on successful save
+            os.remove('%s.xml.swp' % self.cwt)
+
+    def _file_exists(self, filename):
+        try:
+            with open('filename'): pass
+        except IOError:
+            return False
+        return True
+
+    def _build_tree(self):
+        root = Element('topic')
+        root.set('name', self.cwt)
+        for _id,tag,sentence in self.sentences:
+            sen_element = SubElement(root, "sentence")
+            sen_element.set('tag', tag)
+            text_element = SubElement(sen_element, "text")
+            text_element.text = sentence
+            if _id in self.responses.keys():
+                res_element = SubElement(sen_element, "responses")
+                for chartype in self.responses[_id]:
+                    char_element = SubElement(res_element, "character")
+                    char_element.set('type', chartype)
+                    for mood,_next,response in self.responses[_id][chartype]:
+                        mood_element = SubElement(char_element, 'mood')
+                        mood_element.set('type', mood)
+                        mood_element.set('next', _next)
+                        mood_element.text = response
+        return root
+
 
 if __name__ == "__main__":
     arg = None
