@@ -144,6 +144,7 @@ class Shell():
             to_append = (backbuf_string, command)
             if line != "> ":
                 self.backbuffer.append(to_append)
+                # TODO - stop backbuffer from growing huge
 
     def _input(self, prompt):
         self.put(prompt)
