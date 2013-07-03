@@ -219,7 +219,7 @@ class Shell():
                         self.put("Missing parameter")
                     else:
                         ret_choice = command.run(tokens)
-                        if command.new_menu:
+                        if command.new_menu and ret_choice != constants.FAILURE:
                             self.menu = command.new_menu
             if ret_choice == constants.CHOICE_INVALID:
                 self.put("Invalid command")

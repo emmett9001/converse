@@ -2,6 +2,8 @@ from collections import defaultdict
 import sys
 from shutil import copyfile
 import os
+from os import listdir
+from os.path import isfile, join
 import time
 
 from xml.etree import ElementTree as ET
@@ -44,22 +46,24 @@ class Converse(Shell):
             self.cwt = " ".join(tokens[1:])
             self.put("New topic %s" % self.cwt)
             self.sticker("Topic: '%s'" % self.cwt)
-            return constants.CHOICE_LOAD
+            return constants.CHOICE_NEW
         new_com.set_run_function(_run)
         new_com.new_menu = 'edit'
 
         load_com = Command('load <topic>', 'Load a previous topic')
         def _run(tokens):
             topic = " ".join(tokens[1:])
-            self.load_file(topic)
-            self.sticker("Topic: '%s'" % self.cwt)
-            return constants.CHOICE_NEW
+            success = self.load_file(topic)
+            if success:
+                self.sticker("Topic: '%s'" % self.cwt)
+                return constants.CHOICE_LOAD
+            return constants.FAILURE
         load_com.set_run_function(_run)
         load_com.new_menu = 'edit'
 
         list_com = Command('list', 'Show available topics')
         def _run(tokens):
-            self.put("Listing")
+            self.list_topic_files()
             return constants.CHOICE_LIST
         list_com.set_run_function(_run)
 
@@ -138,6 +142,12 @@ class Converse(Shell):
         self.menus = [main_menu, edit_menu]
         self.menu = 'main'  # TODO - hide this somehow?
 
+    def list_topic_files(self):
+        files = [f for f in listdir('.') if isfile(join('.',f)) and f.endswith('.xml')]
+        self.put("Available files:")
+        for f in files:
+            self.put("  " + f)
+
     def list_topic(self):
         for _id,tag,sentence in self.sentences:
             self.put("%d: %s (%s)" % (_id,sentence,tag))
@@ -202,14 +212,21 @@ class Converse(Shell):
         filename = "%s.xml" % topic
         self.sticker("Loading %s" % filename)
 
-        tree = ET.parse(filename)
-        self._parse_tree(tree.getroot())
-
         def reset_sticker():
             time.sleep(.1)
             self.remove_sticker("Loading %s" % filename)
+
+        try:
+            tree = ET.parse(filename)
+            self._parse_tree(tree.getroot())
+        except Exception as e:
+            self.put("Failed to load %s - %s" % (filename, e))
+            self.timeout(reset_sticker)
+            return False
+        else:
             self.put("Success loading %s" % filename)
-        self.timeout(reset_sticker)
+            self.timeout(reset_sticker)
+            return True
 
     def unload_file(self, topic):
         self.write_out()
@@ -281,12 +298,14 @@ class Converse(Shell):
             tup = (self._id_counter, sentence.attrib['tag'], text)
             self.sentences.append(tup)
             self.responses[self._id_counter] = {}
-            for chartype in sentence.find('responses'):
-                _type = chartype.attrib['type']
-                self.responses[self._id_counter][_type] = []
-                for mood in chartype:
-                    tup = (mood.attrib['type'],mood.attrib['next'],mood.text)
-                    self.responses[self._id_counter][_type].append(tup)
+            responses = sentence.find('responses')
+            if responses:
+                for chartype in responses:
+                    _type = chartype.attrib['type']
+                    self.responses[self._id_counter][_type] = []
+                    for mood in chartype:
+                        tup = (mood.attrib['type'],mood.attrib['next'],mood.text)
+                        self.responses[self._id_counter][_type].append(tup)
             self._id_counter += 1
 
 
