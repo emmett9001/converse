@@ -2,6 +2,7 @@ from collections import defaultdict
 import sys
 from shutil import copyfile
 import os
+import time
 
 from xml.etree.ElementTree import Element, SubElement, tostring
 
@@ -9,6 +10,7 @@ from shell import Shell
 from command import Command, BackCommand, QuitCommand, RunScriptCommand
 from menu import Menu
 import constants
+
 
 class Converse(Shell):
     def __init__(self, scriptfile):
@@ -31,6 +33,8 @@ class Converse(Shell):
         self.sentences = []
         self.responses = defaultdict(dict)
         self._id_counter = 0
+
+        self.sticker("Autosave On")
 
     def setup_menus(self):
         new_com = Command('new <topic>', 'Create a new topic')
@@ -101,7 +105,7 @@ class Converse(Shell):
 
         write_com = Command('save', 'Save to a file')
         def _run(tokens):
-            self.write_out()
+            self.write_out(from_command=True)
             return constants.CHOICE_WRITE
         write_com.set_run_function(_run)
 
@@ -112,6 +116,7 @@ class Converse(Shell):
             return back_com.default_run(tokens)
         back_com.set_run_function(_run)
         quit_com = QuitCommand(self.name)
+        quit_com.alias('q')
         run_com = RunScriptCommand(self)
 
         defaults = [quit_com, run_com]
@@ -128,6 +133,7 @@ class Converse(Shell):
         # TODO - sticker list of existing sentences in the edit menu
 
         self.menus = [main_menu, edit_menu]
+        self.menu = 'main'  # TODO - hide this somehow?
 
     def list_topic(self):
         for _id,tag,sentence in self.sentences:
@@ -148,6 +154,7 @@ class Converse(Shell):
                 return
 
         self.responses[sen_id][_type].append(tup)
+        self.write_out()
         self.put("NPC Response created: %s\nwith chartype: %s\nand mood: %s\nand topic: %s" % (text, _type, mood, _next))
 
     def delete_response(self, sen_id, _type, mood):
@@ -160,6 +167,7 @@ class Converse(Shell):
                 in self.responses[sen_id][_type] if a != to_remove]
             if len(self.responses[sen_id][_type]) == 0:
                 self.responses[sen_id].pop(_type)
+            self.write_out()
             self.put("Deleted %s %s response to %d" % (_type, mood, sen_id))
         else:
             self.put("No matching response found.")
@@ -173,6 +181,7 @@ class Converse(Shell):
         tup = (self._id_counter,tag,sentence)
         self.sentences.append(tup)
         self._id_counter += 1
+        self.write_out()
         self.put("Sentence created: %s\nwith tag: %s" % (sentence, tag))
 
     def delete_sentence(self, sen_id):
@@ -183,9 +192,17 @@ class Converse(Shell):
 
         self.sentences = [a for a in self.sentences if a != to_remove]
         self.responses.pop(sen_id)
+        self.write_out()
         self.put("Removed sentence '%s' and all responses" % to_remove[2])
 
-    def write_out(self):
+    def load_file(self):
+        self.put("I'm loading")
+
+    def unload_file(self, topic):
+        self.put("Unloaded %s" % topic)
+
+    def write_out(self, from_command=False):
+        self.sticker("Autosave On", new_output="Saving...")
         tree = self._build_tree()
 
         if self._file_exists('%s.xml' % self.cwt):
@@ -200,13 +217,20 @@ class Converse(Shell):
             f.write(tostring(tree))
             f.close()
         except:
-            self.put("Failed to write file")
+            if from_command:
+                self.put("Failed to write file")
             # restore from swap
             shutil.copyfile('%s.xml.swp' % self.cwt, '%s.xml' % self.cwt)
         else:
-            self.put("Success writing file %s.xml" % self.cwt)
+            if from_command:
+                self.put("Success writing file %s.xml" % self.cwt)
             # remove swap on successful save
             os.remove('%s.xml.swp' % self.cwt)
+
+        def reset_sticker():
+            time.sleep(.1)
+            self.sticker("Saving...", new_output="Autosave On")
+        self.timeout(reset_sticker)
 
     def _file_exists(self, filename):
         try:

@@ -1,5 +1,6 @@
 import curses
 import sys
+import threading
 
 import constants
 
@@ -54,7 +55,7 @@ class Shell():
                 self.stdscr.addstr(ypos,0,printstring)
             i += 1
 
-    def sticker(self, output, pos=None):
+    def sticker(self, output, new_output="", pos=None):
         if len(self.stickers) > 0:
             sort = sorted(self.stickers, key=lambda x: x[1][0])
             ht = sort[0][1][0]+1
@@ -63,8 +64,20 @@ class Shell():
 
         if not pos:
             pos = (ht, self.width - 20)
-        sticker = (output, pos)
+
+        match = None
+        for text,_pos in self.stickers:
+            if output == text:
+                match = (text,_pos)
+                break
+        # remove matching sticker
+        self.stickers = [a for a in self.stickers if a != match]
+        # add replacement text
+
+        sticker = (new_output or output, match[1] if match else pos)
         self.stickers.append(sticker)
+
+        self.update_screen()
 
     def remove_sticker(self, text):
         self.stickers = [a for a in self.stickers if a[0] != text]
@@ -102,13 +115,14 @@ class Shell():
 
     def update_screen(self):
         self.stdscr.clear()
-        self.stdscr.refresh()
 
         self.print_backbuffer()
         self.print_header()
         if self.should_show_help:
             self.print_help()
         self.print_stickers()
+
+        self.stdscr.refresh()
 
     def put(self, output, command=False, pos=None):
         self.update_screen()
@@ -188,8 +202,6 @@ class Shell():
         return command
 
     def main_loop(self):
-        self.menu = 'main'
-
         ret_choice = None
         while ret_choice != constants.CHOICE_QUIT:
             ret_choice = constants.CHOICE_INVALID
@@ -217,6 +229,21 @@ class Shell():
 
     def get_menu(self):
         return [a for a in self.menus if a.name == self.menu][0]
+
+    def timeout(self, func, args=(), kwargs={}, timeout_duration=10, default=None):
+        class InterruptableThread(threading.Thread):
+            def __init__(self):
+                threading.Thread.__init__(self)
+                self.result = default
+            def run(self):
+                self.result = func(*args, **kwargs)
+        it = InterruptableThread()
+        it.start()
+        it.join(timeout_duration)
+        if it.isAlive():
+            return it.result
+        else:
+            return it.result
 
     def end(self):
         curses.endwin()
