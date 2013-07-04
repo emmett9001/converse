@@ -78,6 +78,13 @@ class Shell():
 
         self.update_screen()
 
+    def print_stickers(self):
+        for text,pos in self.stickers:
+            _y,_x = pos
+            if _x + len(text) > self.width:
+                _x = self.width - len(text) - 1
+            self.stdscr.addstr(_y, _x, text)
+
     def remove_sticker(self, text):
         self.stickers = [a for a in self.stickers if a[0] != text]
 
@@ -89,13 +96,6 @@ class Shell():
                 self._header_right = len(line)
             ht += 1
         self._header_bottom = ht
-
-    def print_stickers(self):
-        for text,pos in self.stickers:
-            _y,_x = pos
-            if _x + len(text) > self.width:
-                _x = self.width - len(text) - 1
-            self.stdscr.addstr(_y, _x, text)
 
     def get_helpstring(self):
         helpstring = "\n\n" + self.get_menu().title + "\n" + "-"*20 + "\n" + self.get_menu().options()
@@ -111,17 +111,6 @@ class Shell():
         for line in helpstrings:
             self.stdscr.addstr(ht, _x, line + " "*15)
             ht += 1
-
-    def update_screen(self):
-        self.stdscr.clear()
-
-        self.print_backbuffer()
-        self.print_header()
-        if self.should_show_help:
-            self.print_help()
-        self.print_stickers()
-
-        self.stdscr.refresh()
 
     def put(self, output, command=False, pos=None):
         self.update_screen()
@@ -202,6 +191,13 @@ class Shell():
         return command
 
     def main_loop(self):
+        """main shell IO loop:
+        get an input command
+        split into tokens
+        find matching command
+        validate tokens for command
+        run command
+        """
         ret_choice = None
         while ret_choice != constants.CHOICE_QUIT:
             ret_choice = constants.CHOICE_INVALID
@@ -231,6 +227,8 @@ class Shell():
         return [a for a in self.menus if a.name == self.menu][0]
 
     def timeout(self, func, args=(), kwargs={}, timeout_duration=10, default=None):
+        """create a new thread, run func in the thread for a max of
+        timeout_duraction seconds"""
         class InterruptableThread(threading.Thread):
             def __init__(self):
                 threading.Thread.__init__(self)
@@ -247,3 +245,15 @@ class Shell():
 
     def end(self):
         curses.endwin()
+
+    def update_screen(self):
+        self.stdscr.clear()
+
+        self.print_backbuffer()
+        self.print_header()
+        if self.should_show_help:
+            self.print_help()
+        self.print_stickers()
+
+        self.stdscr.refresh()
+
