@@ -1,9 +1,9 @@
 import getpass
 
-from shell import Shell
-from menu import Menu
-from command import Command, QuitCommand
-import constants
+from shellbuilder.shell import Shell
+from shellbuilder.menu import Menu
+from shellbuilder.command import Command, QuitCommand
+from shellbuilder import constants
 
 
 class MyShell(Shell):
