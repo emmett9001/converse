@@ -6,7 +6,7 @@ import constants
 
 
 class Shell():
-    def __init__(self, scriptfile):
+    def __init__(self, scriptfile=None):
         self.script_lines = self.parse_script_file(scriptfile)
         self.script_counter = 0
         self.scriptfile = ""
@@ -98,14 +98,21 @@ class Shell():
         self._header_bottom = ht
 
     def get_helpstring(self):
-        helpstring = "\n\n" + self.get_menu().title + "\n" + "-"*20 + "\n" + self.get_menu().options()
+        _menu = self.get_menu()
+        if not _menu:
+            return
+
+        helpstring = "\n\n" + _menu.title + "\n" + "-"*20 + "\n" + _menu.options()
         return helpstring
 
     def print_help(self):
-        helpstrings = [" %s" % a for a in self.get_helpstring().split("\n")]
+        _helpstring = self.get_helpstring()
+        if not _helpstring:
+            return
+        helpstrings = [" %s" % a for a in _helpstring.split("\n")]
         ht = 0
         longest = len(max(helpstrings, key=len))
-        _x = self._header_right + 30
+        _x = self._header_right + 50
         if _x + longest > self.width:
             _x = self.width - longest - 1
         for line in helpstrings:
@@ -224,6 +231,7 @@ class Shell():
         return self
 
     def get_menu(self):
+        if not self.menus: return
         return [a for a in self.menus if a.name == self.menu][0]
 
     def timeout(self, func, args=(), kwargs={}, timeout_duration=10, default=None):

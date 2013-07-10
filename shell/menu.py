@@ -7,6 +7,5 @@ class Menu():
     def options(self):
         ret = ""
         for command in self.commands:
-            if command.name not in ['back', 'quit']:
-                ret += "%s\n" % str(command)
+            ret += "%s\n" % str(command)
         return ret
