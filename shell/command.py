@@ -13,8 +13,8 @@ class Command(object):
         def validator(tokens):
             required_params = [token for token in self.definition.split() if token.startswith("<") and token.endswith(">")]
             if len(tokens) - 1 < len(required_params):
-                return False
-            return True
+                return (False, "Missing arguments")
+            return (True, "")
         self.validate = validator
 
         self.name = definition.split()[0]

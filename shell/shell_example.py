@@ -44,7 +44,7 @@ class MyShell(Shell):
         com.run = _run
 
         def _val(tokens):
-            return False
+            return (False, "Command failed because I said so")
         com.validate = _val
 
         return com
