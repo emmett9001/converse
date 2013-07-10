@@ -11,20 +11,30 @@ class MyShell(Shell):
         Shell.__init__(self)
 
         self.name = "My Shell"
+
+        # set the header that appears in the top left of the shell
         self.header = "My Cool Shell"
 
+        # place sticky text on the top right side of the shell
+        # you can change this text by calling sticker() from a command
         self.sticker("Welcome, %s" % getpass.getuser())
 
+        # define commands
         hello_world_com = self.build_hello_command()
         complex_com = self.build_complex_command()
         invalid_com = self.build_invalid_command()
         quit_com = self.build_quit_command()
 
+        # define menus
         main_menu = Menu('main')
+        #menu display title
         main_menu.title = "Main menu"
+        # list of Command objects making up menu
         main_menu.commands = [hello_world_com, complex_com, invalid_com, quit_com]
 
+        # list of menus
         self.menus = [main_menu]
+        # default menu
         self.menu = 'main'
 
     def build_hello_command(self):
