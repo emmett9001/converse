@@ -52,7 +52,7 @@ class Converse(Shell):
                 self.cwt = topic
                 self.put("New topic %s" % self.cwt)
                 self.sticker("Topic: '%s'" % self.cwt)
-            return constants.CHOICE_NEW
+            return constants.CHOICE_VALID
         new_com.set_run_function(_run)
         new_com.new_menu = 'edit'
 
@@ -62,7 +62,7 @@ class Converse(Shell):
             success = self.load_file(topic)
             if success:
                 self.sticker("Topic: '%s'" % self.cwt)
-                return constants.CHOICE_LOAD
+                return constants.CHOICE_VALID
             return constants.FAILURE
         load_com.set_run_function(_run)
         load_com.new_menu = 'edit'
@@ -70,7 +70,7 @@ class Converse(Shell):
         list_com = Command('list', 'Show available topics')
         def _run(tokens):
             self.list_topic_files()
-            return constants.CHOICE_LIST
+            return constants.CHOICE_VALID
         list_com.set_run_function(_run)
 
         sen_com = Command('sentence <tags> <text>', 'Create a new player sentence')
@@ -78,7 +78,7 @@ class Converse(Shell):
             sentence = " ".join(tokens[2:])
             tag = tokens[1]
             self.create_sentence(tag, sentence)
-            return constants.CHOICE_SENTENCE
+            return constants.CHOICE_VALID
         sen_com.set_run_function(_run)
 
         res_com = Command('response <sID> <chartype> <mood> <next_topic> text', 'Create a new NPC response')
@@ -89,13 +89,13 @@ class Converse(Shell):
             mood = tokens[3]
             _next = tokens[4]
             self.create_response(sen_id, _type, mood, _next, text)
-            return constants.CHOICE_RESPONSE
+            return constants.CHOICE_VALID
         res_com.set_run_function(_run)
 
         list_topic_com = Command('list', 'Show current player sentences')
         def _run(tokens):
             self.list_topic()
-            return constants.CHOICE_LIST
+            return constants.CHOICE_VALID
         list_topic_com.set_run_function(_run)
         list_topic_com.alias('ls')
 
@@ -105,20 +105,20 @@ class Converse(Shell):
             _type = tokens[2]
             mood = tokens[3]
             self.delete_response(sen_id, _type, mood)
-            return constants.CHOICE_DELETE_RESPONSE
+            return constants.CHOICE_VALID
         del_res_com.set_run_function(_run)
 
         del_sen_com = Command('delete_s <sen_id>', 'Delete sentence by ID')
         def _run(tokens):
             sen_id = int(tokens[1])
             self.delete_sentence(sen_id)
-            return constants.CHOICE_DELETE_SENTENCE
+            return constants.CHOICE_VALID
         del_sen_com.set_run_function(_run)
 
         write_com = Command('save', 'Save to a file')
         def _run(tokens):
             self.write_out(from_command=True)
-            return constants.CHOICE_WRITE
+            return constants.CHOICE_VALID
         write_com.set_run_function(_run)
 
         # builtins
