@@ -6,6 +6,10 @@ class Command(object):
         self.definition = definition
         self.description = description
 
+        def runner(tokens):
+            return constants.CHOICE_VALID
+        self.run = runner
+
         def validator(tokens):
             required_params = [token for token in self.definition.split() if token.startswith("<") and token.endswith(">")]
             if len(tokens) - 1 < len(required_params):
@@ -25,12 +29,6 @@ class Command(object):
         if alias not in self.aliases:
             self.aliases.append(alias)
 
-    def set_validate_function(self, func):
-        self.validate = func
-
-    def set_run_function(self, func):
-        self.run = func
-
     def num_required_args(self):
         counter = 0
         for token in self.definition.split():
@@ -46,7 +44,7 @@ class BackCommand(Command):
 
         def _run(tokens):
             return constants.CHOICE_BACK
-        self.set_run_function(_run)
+        self.run = _run
 
         self.default_run = _run
 
@@ -57,7 +55,7 @@ class QuitCommand(Command):
 
         def _run(tokens):
             return constants.CHOICE_QUIT
-        self.set_run_function(_run)
+        self.run = _run
 
         self.default_run = _run
 
@@ -70,6 +68,6 @@ class RunScriptCommand(Command):
 
         def _run(tokens):
             self.shell.runscript(tokens[1])
-        self.set_run_function(_run)
+        self.run = _run
 
         self.default_run = _run
