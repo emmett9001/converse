@@ -16,11 +16,12 @@ class MyShell(Shell):
         self.sticker("Welcome, %s" % getpass.getuser())
 
         hello_world_com = self.build_hello_command()
+        invalid_com = self.build_invalid_command()
         quit_com = self.build_quit_command()
 
         main_menu = Menu('main')
         main_menu.title = "Main menu"
-        main_menu.commands = [hello_world_com, quit_com]
+        main_menu.commands = [hello_world_com, invalid_com, quit_com]
 
         self.menus = [main_menu]
         self.menu = 'main'
@@ -33,6 +34,19 @@ class MyShell(Shell):
             self.put("Hello, world!")
             return constants.CHOICE_VALID
         com.run = _run
+        return com
+
+    def build_invalid_command(self):
+        com = Command('nope', 'I do not run')
+        def _run(tokens):
+            self.put("Who cares?")
+            return constants.CHOICE_VALID
+        com.run = _run
+
+        def _val(tokens):
+            return False
+        com.validate = _val
+
         return com
 
     def build_quit_command(self):
