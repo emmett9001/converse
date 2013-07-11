@@ -9,10 +9,10 @@ import time
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import Element, SubElement
 
-from shellbuilder.shell import Shell
-from shellbuilder.command import Command, BackCommand, QuitCommand, RunScriptCommand
-from shellbuilder.menu import Menu
-import shellbuilder.constants as constants
+from candela.shell import Shell
+from candela.command import Command, BackCommand, QuitCommand, RunScriptCommand
+from candela.menu import Menu
+import candela.constants as constants
 
 
 class Converse(Shell):
