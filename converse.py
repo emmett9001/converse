@@ -41,9 +41,9 @@ class Converse(Shell):
         self._id_counter = 0
 
     def setup_menus(self):
-        new_com = Command('new <topic>', 'Create a new topic')
-        def _run(tokens):
-            topic = " ".join(tokens[1:])
+        new_com = Command('new topic', 'Create a new topic')
+        def _run(*args, **kwargs):
+            topic = " ".join(args[0:])
             if topic in self.get_available_topics():
                 self.put("Topic %s already exists." % topic)
                 self.load_file(topic)
@@ -56,9 +56,9 @@ class Converse(Shell):
         new_com.run = _run
         new_com.new_menu = 'edit'
 
-        load_com = Command('load <topic>', 'Load a previous topic')
-        def _run(tokens):
-            topic = " ".join(tokens[1:])
+        load_com = Command('load topic', 'Load a previous topic')
+        def _run(*args, **kwargs):
+            topic = " ".join(args[0:])
             success = self.load_file(topic)
             if success:
                 self.sticker("Topic: '%s'" % self.cwt)
@@ -68,65 +68,65 @@ class Converse(Shell):
         load_com.new_menu = 'edit'
 
         list_com = Command('list', 'Show available topics')
-        def _run(tokens):
+        def _run(*args, **kwargs):
             self.list_topic_files()
             return constants.CHOICE_VALID
         list_com.run = _run
 
-        sen_com = Command('sentence <tags> <text>', 'Create a new player sentence')
-        def _run(tokens):
-            sentence = " ".join(tokens[2:])
-            tag = tokens[1]
+        sen_com = Command('sentence tags text', 'Create a new player sentence')
+        def _run(*args, **kwargs):
+            sentence = " ".join(args[1:])
+            tag = args[0]
             self.create_sentence(tag, sentence)
             return constants.CHOICE_VALID
         sen_com.run = _run
 
-        res_com = Command('response <sID> <chartype> <mood> <next_topic> text', 'Create a new NPC response')
-        def _run(tokens):
-            text = " ".join(tokens[5:])
-            sen_id = int(tokens[1])
-            _type = tokens[2]
-            mood = tokens[3]
-            _next = tokens[4]
+        res_com = Command('response sID chartype mood next_topic text', 'Create a new NPC response')
+        def _run(*args, **kwargs):
+            text = " ".join(args[4:])
+            sen_id = int(args[0])
+            _type = args[1]
+            mood = args[2]
+            _next = args[3]
             self.create_response(sen_id, _type, mood, _next, text)
             return constants.CHOICE_VALID
         res_com.run = _run
 
         list_topic_com = Command('list', 'Show current player sentences')
-        def _run(tokens):
+        def _run(*args, **kwargs):
             self.list_topic()
             return constants.CHOICE_VALID
         list_topic_com.run = _run
         list_topic_com.alias('ls')
 
-        del_res_com = Command('delete_r <sen_id> <type> <mood>', 'Delete an NPC response')
-        def _run(tokens):
-            sen_id = int(tokens[1])
-            _type = tokens[2]
-            mood = tokens[3]
+        del_res_com = Command('delete_r sen_id type mood', 'Delete an NPC response')
+        def _run(*args, **kwargs):
+            sen_id = int(args[0])
+            _type = args[1]
+            mood = args[2]
             self.delete_response(sen_id, _type, mood)
             return constants.CHOICE_VALID
         del_res_com.run = _run
 
-        del_sen_com = Command('delete_s <sen_id>', 'Delete sentence by ID')
-        def _run(tokens):
-            sen_id = int(tokens[1])
+        del_sen_com = Command('delete_s sen_id', 'Delete sentence by ID')
+        def _run(*args, **kwargs):
+            sen_id = int(args[0])
             self.delete_sentence(sen_id)
             return constants.CHOICE_VALID
         del_sen_com.run = _run
 
         write_com = Command('save', 'Save to a file')
-        def _run(tokens):
+        def _run(*args, **kwargs):
             self.write_out(from_command=True)
             return constants.CHOICE_VALID
         write_com.run = _run
 
         # builtins
         back_com = BackCommand('main')
-        def _run(tokens):
+        def _run(*args, **kwargs):
             self.remove_sticker("Topic: '%s'" % self.cwt)
             self.unload_file(self.cwt)
-            return back_com.default_run(tokens)
+            return back_com.default_run(*args, **kwargs)
         back_com.run = _run
         quit_com = QuitCommand(self.name)
         quit_com.alias('q')
