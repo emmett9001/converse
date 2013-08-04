@@ -273,7 +273,7 @@ class Converse(Shell):
         def reset_sticker():
             time.sleep(.1)
             self.sticker("Saving...", new_output="Autosave On")
-        self.timeout(reset_sticker)
+        self.defer(reset_sticker)
 
     def _file_exists(self, filename):
         try:
