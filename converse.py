@@ -34,6 +34,11 @@ class Converse(Shell):
 
         self.sticker("Autosave On")
 
+        # TODO - give responses unique IDs so it's easy to delete them
+        # TODO - create topic as soon as it's used in a response
+        # TODO - column formatting for list command
+        # TODO - clear command
+
     def default_state(self):
         self.cwt = ''  # current working topic
         self.sentences = []
@@ -66,6 +71,9 @@ class Converse(Shell):
             return constants.FAILURE
         load_com.run = _run
         load_com.new_menu = 'edit'
+        def _complete_topic(frag):
+            return self.get_available_topics()
+        load_com.tabcomplete_hooks['topic'] = _complete_topic
 
         list_com = Command('list', 'Show available topics')
         def _run(*args, **kwargs):
@@ -80,7 +88,13 @@ class Converse(Shell):
             self.create_sentence(tag, sentence)
             return constants.CHOICE_VALID
         sen_com.run = _run
-        sen_com.alias('sen')
+        def _complete(frag):
+            tags = []
+            for _id,tag,sentence in self.sentences:
+                for t in tag.split(','):
+                    tags.append(t)
+            return tags
+        sen_com.tabcomplete_hooks['tags'] = _complete
 
         res_com = Command('response sID chartype mood next_topic text', 'Create a new NPC response')
         def _run(*args, **kwargs):
@@ -184,6 +198,7 @@ class Converse(Shell):
         self.responses[sen_id][_type].append(tup)
         self.write_out()
         self.put("NPC Response created: %s\nwith chartype: %s\nand mood: %s\nand topic: %s" % (text, _type, mood, _next))
+        # TODO - prompt for topic creation
 
     def delete_response(self, sen_id, _type, mood):
         if _type in self.responses[sen_id].keys():
@@ -191,6 +206,9 @@ class Converse(Shell):
                 if res[0] == mood:
                     to_remove = res
                     break
+            if not to_remove:
+                self.put("No matching response found.")
+                return
             self.responses[sen_id][_type] = [a for a
                 in self.responses[sen_id][_type] if a != to_remove]
             if len(self.responses[sen_id][_type]) == 0:
