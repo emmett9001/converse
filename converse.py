@@ -288,6 +288,7 @@ class Converse(Shell):
         for _id,tag,sentence in self.sentences:
             sen_element = SubElement(root, "sentence")
             sen_element.set('tag', tag)
+            sen_element.set('sid', str(_id))
             text_element = SubElement(sen_element, "text")
             text_element.text = sentence
             if _id in self.responses.keys():
@@ -306,18 +307,19 @@ class Converse(Shell):
         self.cwt = root.attrib['name']
         for sentence in root:
             text = sentence.find('text').text
-            tup = (self._id_counter, sentence.attrib['tag'], text)
+            _id = int(sentence.attrib['sid'])
+            tup = (_id, sentence.attrib['tag'], text)
             self.sentences.append(tup)
-            self.responses[self._id_counter] = {}
+            self.responses[_id] = {}
             responses = sentence.find('responses')
             if responses:
                 for chartype in responses:
                     _type = chartype.attrib['type']
-                    self.responses[self._id_counter][_type] = []
+                    self.responses[_id][_type] = []
                     for mood in chartype:
                         tup = (mood.attrib['type'],mood.attrib['next'],mood.text)
-                        self.responses[self._id_counter][_type].append(tup)
-            self._id_counter += 1
+                        self.responses[_id][_type].append(tup)
+        self._id_counter = _id + 1
 
 
 if __name__ == "__main__":
