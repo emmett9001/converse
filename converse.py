@@ -80,6 +80,7 @@ class Converse(Shell):
             self.create_sentence(tag, sentence)
             return constants.CHOICE_VALID
         sen_com.run = _run
+        sen_com.alias('sen')
 
         res_com = Command('response sID chartype mood next_topic text', 'Create a new NPC response')
         def _run(*args, **kwargs):
@@ -91,6 +92,7 @@ class Converse(Shell):
             self.create_response(sen_id, _type, mood, _next, text)
             return constants.CHOICE_VALID
         res_com.run = _run
+        res_com.alias('res')
 
         list_topic_com = Command('list', 'Show current player sentences')
         def _run(*args, **kwargs):
@@ -107,6 +109,7 @@ class Converse(Shell):
             self.delete_response(sen_id, _type, mood)
             return constants.CHOICE_VALID
         del_res_com.run = _run
+        del_res_com.alias('delr')
 
         del_sen_com = Command('delete_s sen_id', 'Delete sentence by ID')
         def _run(*args, **kwargs):
@@ -114,6 +117,7 @@ class Converse(Shell):
             self.delete_sentence(sen_id)
             return constants.CHOICE_VALID
         del_sen_com.run = _run
+        del_sen_com.alias('dels')
 
         write_com = Command('save', 'Save to a file')
         def _run(*args, **kwargs):
