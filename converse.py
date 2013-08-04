@@ -232,11 +232,11 @@ class Converse(Shell):
             self._parse_tree(tree.getroot())
         except Exception as e:
             self.put("Failed to load %s - %s" % (filename, e))
-            self.timeout(reset_sticker)
+            self.defer(reset_sticker)
             return False
         else:
             self.put("Success loading %s" % filename)
-            self.timeout(reset_sticker)
+            self.defer(reset_sticker)
             return True
 
     def unload_file(self, topic):
