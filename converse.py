@@ -34,6 +34,8 @@ class Converse(Shell):
 
         self.sticker("Autosave On")
 
+        self.should_show_hint = True
+
         # TODO - give responses unique IDs so it's easy to delete them
         # TODO - create topic as soon as it's used in a response
         # TODO - sentence and response editing
@@ -107,6 +109,15 @@ class Converse(Shell):
             return constants.CHOICE_VALID
         res_com.run = _run
         res_com.alias('res')
+        def _complete_chartype(frag):
+            return self.list_all_chartypes()
+        res_com.tabcomplete_hooks['chartype'] = _complete_chartype
+        def _complete_mood(frag):
+            return self.list_all_moods()
+        res_com.tabcomplete_hooks['mood'] = _complete_mood
+        def _complete_topic(frag):
+            return list(set(self.get_available_topics() + self.list_new_topics()))
+        res_com.tabcomplete_hooks['next_topic'] = _complete_topic
 
         list_topic_com = Command('list', 'Show current player sentences')
         def _run(*args, **kwargs):
@@ -185,7 +196,7 @@ class Converse(Shell):
             if len(s) < l:
                 s += " "*(l-len(s))
             return s
-        thresh = 20
+        thresh = 40
         for _id,tag,sentence in self.sentences:
             capped = cap(sentence, thresh)
             captag = cap(tag, thresh-8)
@@ -211,6 +222,28 @@ class Converse(Shell):
         self.write_out()
         self.put("NPC Response created: %s\nwith chartype: %s\nand mood: %s\nand topic: %s" % (text, _type, mood, _next))
         # TODO - prompt for topic creation
+
+    def list_all_chartypes(self):
+        ret = []
+        for res in self.responses.keys():
+            ret += self.responses[res].keys()
+        return list(set(ret))
+
+    def list_all_moods(self):
+        ret = []
+        for res in self.responses.keys():
+            for _type in self.responses[res].keys():
+                for mood,_next,text in self.responses[res][_type]:
+                    ret.append(mood)
+        return list(set(ret))
+
+    def list_new_topics(self):
+        ret = []
+        for res in self.responses.keys():
+            for _type in self.responses[res].keys():
+                for mood,_next,text in self.responses[res][_type]:
+                    ret.append(_next)
+        return list(set(ret))
 
     def delete_response(self, sen_id, _type, mood):
         if _type in self.responses[sen_id].keys():
