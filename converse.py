@@ -37,8 +37,8 @@ class Converse(Shell):
         self.should_show_hint = True
 
         # TODO - give responses unique IDs so it's easy to delete them
-        # TODO - create topic as soon as it's used in a response
         # TODO - sentence and response editing
+        # TODO - deletion command autocompletes
         # TODO - clear command
 
     def default_state(self):
