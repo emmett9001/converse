@@ -38,6 +38,7 @@ class Converse(Shell):
 
         # TODO - give responses unique IDs so it's easy to delete them
         # TODO - sentence and response editing
+        # TODO - "play" command that allows interactive tree traversal
         # TODO - clear command
 
     def default_state(self):
