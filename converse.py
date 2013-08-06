@@ -36,7 +36,7 @@ class Converse(Shell):
 
         # TODO - give responses unique IDs so it's easy to delete them
         # TODO - create topic as soon as it's used in a response
-        # TODO - column formatting for list command
+        # TODO - sentence and response editing
         # TODO - clear command
 
     def default_state(self):
@@ -178,12 +178,24 @@ class Converse(Shell):
         return files
 
     def list_topic(self):
+        def cap(s, l, wrap=()):
+            s =  s if len(s)<=l else s[0:l-3]+'...'
+            if wrap:
+                s = "%s%s%s" % (wrap[0], s, wrap[1])
+            if len(s) < l:
+                s += " "*(l-len(s))
+            return s
+        thresh = 20
         for _id,tag,sentence in self.sentences:
-            self.put("%d: %s (%s)" % (_id,sentence,tag))
+            capped = cap(sentence, thresh)
+            captag = cap(tag, thresh-8)
+            self.put("%d: %s (%s)" % (_id,capped,tag))
             for _type in self.responses[_id]:
                 self.put("  %s" % _type)
                 for mood,_next,text in self.responses[_id][_type]:
-                    self.put("    %s (%s) -> %s" % (text, mood, _next))
+                    capped = cap(text, thresh-1)
+                    capmood = "%s" % cap(mood, thresh-8, wrap=("(", ")"))
+                    self.put("    %s %s -> %s" % (capped, capmood, _next))
 
     def create_response(self, sen_id, _type, mood, _next, text):
         tup = (mood,_next,text)
