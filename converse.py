@@ -38,7 +38,6 @@ class Converse(Shell):
 
         # TODO - give responses unique IDs so it's easy to delete them
         # TODO - sentence and response editing
-        # TODO - deletion command autocompletes
         # TODO - clear command
 
     def default_state(self):
@@ -48,6 +47,14 @@ class Converse(Shell):
         self._id_counter = 0
 
     def setup_menus(self):
+        # completions
+        def _complete_chartype(frag):
+            return self.list_all_chartypes()
+        def _complete_mood(frag):
+            return self.list_all_moods()
+        def _complete_topic(frag):
+            return list(set(self.get_available_topics() + self.list_new_topics()))
+
         new_com = Command('new topic', 'Create a new topic')
         def _run(*args, **kwargs):
             topic = " ".join(args[0:])
@@ -109,14 +116,8 @@ class Converse(Shell):
             return constants.CHOICE_VALID
         res_com.run = _run
         res_com.alias('res')
-        def _complete_chartype(frag):
-            return self.list_all_chartypes()
         res_com.tabcomplete_hooks['chartype'] = _complete_chartype
-        def _complete_mood(frag):
-            return self.list_all_moods()
         res_com.tabcomplete_hooks['mood'] = _complete_mood
-        def _complete_topic(frag):
-            return list(set(self.get_available_topics() + self.list_new_topics()))
         res_com.tabcomplete_hooks['next_topic'] = _complete_topic
 
         list_topic_com = Command('list', 'Show current player sentences')
@@ -135,6 +136,8 @@ class Converse(Shell):
             return constants.CHOICE_VALID
         del_res_com.run = _run
         del_res_com.alias('delr')
+        del_res_com.tabcomplete_hooks['type'] = _complete_chartype
+        rel_res_com.tabcomplete_hooks['mood'] = _complete_mood
 
         del_sen_com = Command('delete_s sen_id', 'Delete sentence by ID')
         def _run(*args, **kwargs):
