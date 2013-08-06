@@ -137,7 +137,7 @@ class Converse(Shell):
         del_res_com.run = _run
         del_res_com.alias('delr')
         del_res_com.tabcomplete_hooks['type'] = _complete_chartype
-        rel_res_com.tabcomplete_hooks['mood'] = _complete_mood
+        del_res_com.tabcomplete_hooks['mood'] = _complete_mood
 
         del_sen_com = Command('delete_s sen_id', 'Delete sentence by ID')
         def _run(*args, **kwargs):
