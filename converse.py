@@ -10,7 +10,7 @@ from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import Element, SubElement
 
 from candela.shell import Shell
-from candela.command import Command, BackCommand, QuitCommand, RunScriptCommand
+from candela.command import Command, BackCommand, QuitCommand, RunScriptCommand, ClearCommand
 from candela.menu import Menu
 import candela.constants as constants
 
@@ -24,7 +24,7 @@ class Converse(Shell):
         self.header = """
    ____                                                    
   / ___|___  _ ____   _____ _ __ ___  ___                  
- | |   / _ \| '_ \ \ / / _ \ '__/ __|/ _ \\                
+ | |   / _ \| '_ \ \ / / _ \ '__/ __|/ _ \\                 
  | |__| (_) | | | \ V /  __/ |  \__ \  __/                 
   \____\___/|_| |_|\_/ \___|_|  |___/\___|                 
                                            by Emmett Butler"""
@@ -39,13 +39,13 @@ class Converse(Shell):
         # TODO - give responses unique IDs so it's easy to delete them
         # TODO - sentence and response editing
         # TODO - "play" command that allows interactive tree traversal
-        # TODO - clear command
 
     def default_state(self):
         self.cwt = ''  # current working topic
         self.sentences = []
         self.responses = defaultdict(dict)
         self._id_counter = 0
+        self._res_id_counter = 0
 
     def setup_menus(self):
         # completions
@@ -128,12 +128,12 @@ class Converse(Shell):
         list_topic_com.run = _run
         list_topic_com.alias('ls')
 
-        del_res_com = Command('delete_r sen_id type mood', 'Delete an NPC response')
+        del_res_com = Command('delete_r sen_id type res_id', 'Delete an NPC response')
         def _run(*args, **kwargs):
             sen_id = int(args[0])
             _type = args[1]
-            mood = args[2]
-            self.delete_response(sen_id, _type, mood)
+            res_id = int(args[2])
+            self.delete_response(sen_id, _type, res_id)
             return constants.CHOICE_VALID
         del_res_com.run = _run
         del_res_com.alias('delr')
@@ -164,8 +164,9 @@ class Converse(Shell):
         quit_com = QuitCommand(self.name)
         quit_com.alias('q')
         run_com = RunScriptCommand(self)
+        clear_com = ClearCommand(self)
 
-        defaults = [quit_com, run_com]
+        defaults = [quit_com, run_com, clear_com]
 
         main_menu = Menu('main')
         main_menu.title = "Main menu"
@@ -207,22 +208,23 @@ class Converse(Shell):
             self.put("%d: %s (%s)" % (_id,capped,tag))
             for _type in self.responses[_id]:
                 self.put("  %s" % _type)
-                for mood,_next,text in self.responses[_id][_type]:
-                    capped = cap(text, thresh-1)
+                for _rid,mood,_next,text in self.responses[_id][_type]:
+                    capped = cap(text, thresh-4)
                     capmood = "%s" % cap(mood, thresh-8, wrap=("(", ")"))
-                    self.put("    %s %s -> %s" % (capped, capmood, _next))
+                    self.put("    %d: %s %s -> %s" % (_rid, capped, capmood, _next))
 
     def create_response(self, sen_id, _type, mood, _next, text):
-        tup = (mood,_next,text)
+        tup = (self._res_id_counter,mood,_next,text)
         if _type not in self.responses[sen_id].keys():
             self.responses[sen_id][_type] = []
 
         for res in self.responses[sen_id][_type]:
-            if mood == res[0]:
+            if mood == res[1]:
                 self.put("Duplicate mood: %s" % mood)
                 return
 
         self.responses[sen_id][_type].append(tup)
+        self._res_id_counter += 1
         self.write_out()
         self.put("NPC Response created: %s\nwith chartype: %s\nand mood: %s\nand topic: %s" % (text, _type, mood, _next))
         # TODO - prompt for topic creation
@@ -237,7 +239,7 @@ class Converse(Shell):
         ret = []
         for res in self.responses.keys():
             for _type in self.responses[res].keys():
-                for mood,_next,text in self.responses[res][_type]:
+                for _rid,mood,_next,text in self.responses[res][_type]:
                     ret.append(mood)
         return list(set(ret))
 
@@ -245,14 +247,14 @@ class Converse(Shell):
         ret = []
         for res in self.responses.keys():
             for _type in self.responses[res].keys():
-                for mood,_next,text in self.responses[res][_type]:
+                for _rid,mood,_next,text in self.responses[res][_type]:
                     ret.append(_next)
         return list(set(ret))
 
-    def delete_response(self, sen_id, _type, mood):
+    def delete_response(self, sen_id, _type, res_id):
         if _type in self.responses[sen_id].keys():
             for res in self.responses[sen_id][_type]:
-                if res[0] == mood:
+                if res[0] == res_id:
                     to_remove = res
                     break
             if not to_remove:
@@ -263,7 +265,7 @@ class Converse(Shell):
             if len(self.responses[sen_id][_type]) == 0:
                 self.responses[sen_id].pop(_type)
             self.write_out()
-            self.put("Deleted %s %s response to %d" % (_type, mood, sen_id))
+            self.put("Deleted %s response to sentence %d" % (_type, sen_id))
         else:
             self.put("No matching response found.")
 
@@ -367,7 +369,7 @@ class Converse(Shell):
                 for chartype in self.responses[_id]:
                     char_element = SubElement(res_element, "character")
                     char_element.set('type', chartype)
-                    for mood,_next,response in self.responses[_id][chartype]:
+                    for _rid, mood,_next,response in self.responses[_id][chartype]:
                         mood_element = SubElement(char_element, 'mood')
                         mood_element.set('type', mood)
                         mood_element.set('next', _next)
@@ -388,8 +390,9 @@ class Converse(Shell):
                     _type = chartype.attrib['type']
                     self.responses[_id][_type] = []
                     for mood in chartype:
-                        tup = (mood.attrib['type'],mood.attrib['next'],mood.text)
+                        tup = (self._res_id_counter, mood.attrib['type'],mood.attrib['next'],mood.text)
                         self.responses[_id][_type].append(tup)
+                        self._res_id_counter += 1
         self._id_counter = _id + 1
 
 
