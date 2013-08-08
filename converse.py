@@ -380,6 +380,7 @@ class Converse(Shell):
 
     def _parse_tree(self, root):
         self.cwt = root.attrib['name']
+        _id = self._id_counter
         for sentence in root:
             text = sentence.find('text').text
             try:
