@@ -44,6 +44,7 @@ class Converse(Shell):
         self.cwt = ''  # current working topic
         self.sentences = []
         self.responses = defaultdict(dict)
+        self.created_topics = []
         self._id_counter = 0
         self._res_id_counter = 0
 
@@ -191,7 +192,7 @@ class Converse(Shell):
     def get_available_topics(self):
         files = [f[:-4] for f in listdir('.') if \
                  isfile(join('.',f)) and f.endswith('.xml')]
-        return files
+        return list(set(files + self.created_topics))
 
     def list_topic(self):
         def cap(s, l, wrap=()):
@@ -225,6 +226,8 @@ class Converse(Shell):
 
         self.responses[sen_id][_type].append(tup)
         self._res_id_counter += 1
+        if _next not in self.created_topics:
+            self.created_topics.append(_next)
         self.write_out()
         self.put("NPC Response created: %s\nwith chartype: %s\nand mood: %s\nand topic: %s" % (text, _type, mood, _next))
         # TODO - prompt for topic creation
@@ -392,6 +395,8 @@ class Converse(Shell):
                     for mood in chartype:
                         tup = (self._res_id_counter, mood.attrib['type'],mood.attrib['next'],mood.text)
                         self.responses[_id][_type].append(tup)
+                        if mood.attrib['next'] not in self.created_topics:
+                            self.created_topics.append(mood.attrib['next'])
                         self._res_id_counter += 1
         self._id_counter = _id + 1
 
