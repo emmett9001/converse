@@ -382,7 +382,11 @@ class Converse(Shell):
         self.cwt = root.attrib['name']
         for sentence in root:
             text = sentence.find('text').text
-            _id = int(sentence.attrib['sid'])
+            try:
+                _id = int(sentence.attrib['sid'])
+            except:
+                self._id_counter += 1
+                _id = self._id_counter
             tup = (_id, sentence.attrib['tag'], text)
             self.sentences.append(tup)
             self.responses[_id] = {}
