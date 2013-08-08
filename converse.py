@@ -1,18 +1,19 @@
-from collections import defaultdict
 import sys
-from shutil import copyfile
 import os
+import time
+from collections import defaultdict
+from shutil import copyfile
 from os import listdir
 from os.path import isfile, join
-import time
 
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import Element, SubElement
 
-from candela.shell import Shell
-from candela.command import Command, BackCommand, QuitCommand, RunScriptCommand, ClearCommand
-from candela.menu import Menu
 import candela.constants as constants
+from candela.shell import Shell
+from candela.command import Command, BackCommand, QuitCommand, RunScriptCommand
+from candela.command import ClearCommand
+from candela.menu import Menu
 
 
 class Converse(Shell):
@@ -36,9 +37,9 @@ class Converse(Shell):
 
         self.should_show_hint = True
 
-        # TODO - give responses unique IDs so it's easy to delete them
         # TODO - sentence and response editing
         # TODO - "play" command that allows interactive tree traversal
+        # TODO - sticker list of existing sentences in the edit menu
 
     def default_state(self):
         self.cwt = ''  # current working topic
@@ -177,8 +178,6 @@ class Converse(Shell):
         edit_menu.title = "Editing menu"
         edit_menu.commands = [sen_com, del_sen_com, res_com, del_res_com,
                               list_topic_com, back_com, write_com] + defaults
-
-        # TODO - sticker list of existing sentences in the edit menu
 
         self.menus = [main_menu, edit_menu]
         self.menu = 'main'  # TODO - hide this somehow?
