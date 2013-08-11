@@ -48,6 +48,7 @@ class Converse(Shell):
         self.created_topics = []
         self._id_counter = 0
         self._res_id_counter = 0
+        self.path = "./"
 
     def setup_menus(self):
         # completions
@@ -156,6 +157,22 @@ class Converse(Shell):
             return constants.CHOICE_VALID
         write_com.run = _run
 
+        cd_com = Command('cd path', 'Change current directory')
+        def _run(*args, **kwargs):
+            path = ""
+            for part in args:
+                path += part
+            path = path.replace('\\', ' ')
+            self.path = path
+            return constants.CHOICE_VALID
+        cd_com.run = _run
+
+        pwd_com = Command('pwd', 'Print current directory')
+        def _run(*args, **kwargs):
+            self.put(self.path)
+            return constants.CHOICE_VALID
+        pwd_com.run = _run
+
         # builtins
         back_com = BackCommand('main')
         def _run(*args, **kwargs):
@@ -172,7 +189,7 @@ class Converse(Shell):
 
         main_menu = Menu('main')
         main_menu.title = "Main menu"
-        main_menu.commands = [new_com, load_com, list_com] + defaults
+        main_menu.commands = [new_com, load_com, list_com, cd_com, pwd_com] + defaults
 
         edit_menu = Menu('edit')
         edit_menu.title = "Editing menu"
@@ -189,8 +206,8 @@ class Converse(Shell):
             self.put("  " + f)
 
     def get_available_topics(self):
-        files = [f[:-4] for f in listdir('.') if \
-                 isfile(join('.',f)) and f.endswith('.xml')]
+        files = [f[:-4] for f in listdir(self.path) if \
+                 isfile(join(self.path,f)) and f.endswith('.xml')]
         return list(set(files + self.created_topics))
 
     def list_topic(self):
@@ -295,7 +312,7 @@ class Converse(Shell):
         self.put("Removed sentence '%s' and all responses" % to_remove[2])
 
     def load_file(self, topic):
-        filename = "%s.xml" % topic
+        filename = "%s/%s.xml" % (self.path, topic)
         self.sticker("Loading %s" % filename)
 
         def reset_sticker():
@@ -323,39 +340,41 @@ class Converse(Shell):
         self.sticker("Autosave On", new_output="Saving...")
         tree = self._build_tree()
 
-        if self._file_exists('%s.xml' % self.cwt):
-            shutil.copyfile('%s.xml' % self.cwt, '%s.xml.swp' % self.cwt)
+        filename = "%s/%s.xml" % (self.path, self.cwt)
+
+        def _file_exists(filename):
+            try:
+                with open(filename): pass
+            except IOError:
+                return False
+            return True
+
+        if _file_exists(filename):
+            shutil.copyfile(filename, '%s.swp' % filename)
         else:
-            f = open('%s.xml.swp' % self.cwt, "w+")
+            f = open('%s.swp' % (filename), "w+")
             f.write(ET.tostring(tree))
             f.close()
 
         try:
-            f = open('%s.xml' % self.cwt, "w+")
+            f = open(filename, "w+")
             f.write(ET.tostring(tree))
             f.close()
         except:
             if from_command:
                 self.put("Failed to write file")
             # restore from swap
-            shutil.copyfile('%s.xml.swp' % self.cwt, '%s.xml' % self.cwt)
+            shutil.copyfile('%s.swp' % filename, filename)
         else:
             if from_command:
-                self.put("Success writing file %s.xml" % self.cwt)
+                self.put("Success writing file %s" % filename)
             # remove swap on successful save
-            os.remove('%s.xml.swp' % self.cwt)
+            os.remove('%s.swp' % filename)
 
         def reset_sticker():
             time.sleep(.1)
             self.sticker("Saving...", new_output="Autosave On")
         self.defer(reset_sticker)
-
-    def _file_exists(self, filename):
-        try:
-            with open('filename'): pass
-        except IOError:
-            return False
-        return True
 
     def _build_tree(self):
         root = Element('topic')
