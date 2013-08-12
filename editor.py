@@ -19,7 +19,7 @@ class Editor():
         self.created_topics = []
         self._id_counter = 0
         self._res_id_counter = 0
-        self.path = "./"
+        self.path = "."
 
     def list_topic_files(self):
         files = self.get_available_topics()
