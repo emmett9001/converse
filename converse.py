@@ -151,6 +151,15 @@ class Converse(Shell):
         del_sen_com.run = _run
         del_sen_com.alias('dels')
 
+        edit_sen_com = Command('edit_s sen_id tags text', 'Edit an existing sentence')
+        def _run(*args, **kwargs):
+            sen_id = int(args[0])
+            sentence = " ".join(args[2:])
+            tag = args[1]
+            self.edit_sentence(sen_id, tag, sentence)
+            return constants.CHOICE_VALID
+        edit_sen_com.run = _run
+
         write_com = Command('save', 'Save to a file')
         def _run(*args, **kwargs):
             self.write_out(from_command=True)
@@ -193,7 +202,7 @@ class Converse(Shell):
 
         edit_menu = Menu('edit')
         edit_menu.title = "Editing menu"
-        edit_menu.commands = [sen_com, del_sen_com, res_com, del_res_com,
+        edit_menu.commands = [sen_com, edit_sen_com, del_sen_com, res_com, del_res_com,
                               list_topic_com, back_com, write_com] + defaults
 
         self.menus = [main_menu, edit_menu]
@@ -219,7 +228,8 @@ class Converse(Shell):
                 s += " "*(l-len(s))
             return s
         thresh = 40
-        for _id,tag,sentence in self.sentences:
+        _sorted = sorted(self.sentences, key=lambda x: x[0])
+        for _id,tag,sentence in _sorted:
             capped = cap(sentence, thresh)
             captag = cap(tag, thresh-8)
             self.put("%d: %s (%s)" % (_id,capped,tag))
@@ -299,6 +309,18 @@ class Converse(Shell):
         self._id_counter += 1
         self.write_out()
         self.put("Sentence created: %s\nwith tag: %s" % (sentence, tag))
+
+    def edit_sentence(self, sen_id, tags, text):
+        for sen in self.sentences:
+            if sen[0] == sen_id:
+                editing = sen
+        if not editing:
+            self.put("Sentence ID %d not found" % sen_id)
+            return
+        self.sentences.pop(self.sentences.index(editing))
+        self.sentences.append((sen_id, tags, text))
+        self.write_out()
+        self.put("Success editing sentence %d" % sen_id)
 
     def delete_sentence(self, sen_id):
         for sen in self.sentences:
