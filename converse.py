@@ -37,7 +37,7 @@ class Converse(Shell):
 
         self.should_show_hint = True
 
-        # TODO - sentence and response editing
+        # TODO - response editing
         # TODO - "play" command that allows interactive tree traversal
         # TODO - sticker list of existing sentences in the edit menu
 
