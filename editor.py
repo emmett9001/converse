@@ -233,6 +233,8 @@ class Editor():
         return root
 
     def _parse_tree(self, root):
+        self.sentences = []
+        self.responses = defaultdict(dict)
         self.cwt = root.attrib['name']
         _id = self._id_counter
         for sentence in root:

@@ -6,6 +6,7 @@ from candela.command import Command, BackCommand, QuitCommand, RunScriptCommand
 from candela.command import ClearCommand
 from candela.menu import Menu
 from editor import Editor
+from convoplayer import ConversationPlayer
 
 
 class Converse(Shell):
@@ -172,6 +173,15 @@ class Converse(Shell):
             return constants.CHOICE_VALID
         pwd_com.run = _run
 
+        convoplay_com = Command('play chartype mood [-e entry_point]', 'Run a conversation')
+        def _run(*args, **kwargs):
+            entry = kwargs.get('e', 'greetings')
+            char = args[0]
+            mood = args[1]
+            self.convoplayer.run(char, mood, entry=entry)
+            return entry.lower()
+        convoplay_com.run = _run
+
         # builtins
         back_com = BackCommand('main')
         def _run(*args, **kwargs):
@@ -188,12 +198,13 @@ class Converse(Shell):
 
         main_menu = Menu('main')
         main_menu.title = "Main menu"
-        main_menu.commands = [new_com, load_com, list_com, cd_com, pwd_com] + defaults
+        main_menu.commands = [new_com, load_com, list_com, cd_com, pwd_com,
+                              convoplay_com] + defaults
 
         edit_menu = Menu('edit')
         edit_menu.title = "Editing menu"
         edit_menu.commands = [sen_com, edit_sen_com, del_sen_com, res_com, del_res_com,
-                              list_topic_com, back_com, write_com] + defaults
+                              list_topic_com, back_com, convoplay_com, write_com] + defaults
 
         self.menus = [main_menu, edit_menu]
         self.menu = 'main'  # TODO - hide this somehow?
