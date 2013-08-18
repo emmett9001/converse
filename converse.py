@@ -24,6 +24,7 @@ class Converse(Shell):
                                            by Emmett Butler"""
 
         self.editor = Editor(self)
+        self.convoplayer = ConversationPlayer(self)
         self.setup_menus()
 
         self.sticker("Autosave On")
