@@ -8,7 +8,6 @@ class ConversationPlayer():
     def __init__(self, shell):
         self.shell = shell
         self.editor = Editor(shell)
-        self.default_options = defaults
 
     def run(self, chartype, mood, entry):
         sentences_menu = self._next_step(chartype, mood, entry)
