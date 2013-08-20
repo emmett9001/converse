@@ -1,6 +1,6 @@
 from editor import Editor
 from candela.menu import Menu
-from candela.command import Command
+from candela.command import Command, BackCommand, QuitCommand, ClearCommand
 from candela import constants
 
 
@@ -8,6 +8,7 @@ class ConversationPlayer():
     def __init__(self, shell):
         self.shell = shell
         self.editor = Editor(shell)
+        self.defaults = self.setup_defaults()
 
     def run(self, chartype, mood, entry):
         sentences_menu = self._next_step(chartype, mood, entry)
@@ -42,4 +43,16 @@ class ConversationPlayer():
             com.run = _run
             sentences_menu.commands.append(com)
 
+        sentences_menu.commands += self.defaults
+
         return sentences_menu
+
+    def setup_defaults(self):
+        quit_com = QuitCommand('converse')
+        quit_com.alias('q')
+
+        clear_com = ClearCommand(self.shell)
+
+        back_com = BackCommand('main')
+
+        return [back_com, clear_com, quit_com]
