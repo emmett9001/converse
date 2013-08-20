@@ -20,6 +20,12 @@ class ConversationPlayer():
         def _run(text=text, _id=_id):
             self.shell.put("Player: '%s'" % text)
             responses = self.editor.responses[_id].get(chartype, [])
+            if not responses:
+                for _typestring in self.editor.responses[_id]:
+                    for _type in _typestring.split(','):
+                        if chartype == _type or _typestring == "&ALL":
+                            responses = self.editor.responses[_id][_typestring]
+                            break
             found = False
             next_topic = 'main'
             for _rid,_mood,_next,_text in responses:
