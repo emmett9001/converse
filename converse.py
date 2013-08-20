@@ -55,9 +55,8 @@ class Converse(Shell):
                 self.editor.cwt = topic
                 self.put("New topic %s" % self.editor.cwt)
                 self.sticker("Topic: '%s'" % self.editor.cwt)
-            return constants.CHOICE_VALID
+            return 'edit'
         new_com.run = _run
-        new_com.new_menu = 'edit'
 
         load_com = Command('load topic', 'Load a previous topic')
         def _run(*args, **kwargs):
@@ -65,10 +64,9 @@ class Converse(Shell):
             success = self.editor.load_file(topic)
             if success:
                 self.sticker("Topic: '%s'" % self.editor.cwt)
-                return constants.CHOICE_VALID
+                return 'edit'
             return constants.FAILURE
         load_com.run = _run
-        load_com.new_menu = 'edit'
         def _complete_topic(frag):
             return self.editor.get_available_topics()
         load_com.tabcomplete_hooks['topic'] = _complete_topic
